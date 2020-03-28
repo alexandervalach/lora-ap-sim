@@ -22,8 +22,14 @@ class ConnectionController:
 
     def send_data(self, data):
         self.conn.send(data)
-        reply = self.conn.recv(1280)
-        print(reply)
+        print(data)
+
+        try:
+            reply = self.conn.recv(1280)
+            print(reply)
+        except ssl.SSLError as s:
+            print("No reply from network server")
+            print(s)
 
     def close(self):
         self.conn.close()
