@@ -1,22 +1,51 @@
+#!/usr/bin/python
+
 from connection_controller import ConnectionController
 from end_node import EndNode
-import time
+from access_point import AccessPoint
+import time, sys, getopt
 
-setr_message = '{"message_name": "SETR","message_body": {"id": "11111111","ver": 1.0,"m_chan": true,"channels": 8,"sup_freqs": [863000000,100000,870000000],"sup_sfs": [7,8,9,10,11,12],"sup_crs": ["4/5","4/6","4/7","4/8"],"sup_bands": [500000,250000,125000],"lora_stand": {"name": "Lora@FIIT","version": "1.0"},"max_power": 14}}'
-host = '147.175.149.229'
-port = 25001
 
-conn = ConnectionController(host, port)
-conn.connect()
-conn.send_data(setr_message)
-end_node = EndNode()
+def main(argv):
+    ap_id = ''
 
-node_ids = ['yv4j', 'ALBY', 'QUFB', 'ALEX', 'Jaro']
-seq = 1
+    try:
+        opts, args = getopt.getopt(argv, "hi:", ["id="])
+    except getopt.GetoptError:
+        print("main.py -i <access-point-id>")
+        sys.exit(2)
 
-while True:
-    for node_id in node_ids:
-        rxl_message = end_node.generate_rxl(node_id, seq)
-        conn.send_data(rxl_message)
-    seq += 1
-    time.sleep(10)
+    for opt, arg in opts:
+        if opt == '-h':
+            print("main.py -i <access-point-id>")
+            sys.exit(0)
+        elif opt in ("-i", "--id"):
+            ap_id = arg
+
+    if ap_id:
+        access_point = AccessPoint(ap_id)
+        setr_message = access_point.generate_setr()
+        print(setr_message)
+        host = '147.175.149.229'
+        port = 25001
+
+        conn = ConnectionController(host, port)
+        conn.connect()
+        conn.send_data(setr_message)
+        end_node = EndNode()
+
+        node_ids = ['yv4j', 'ALBY', 'QUFB', 'ALEX', 'Jaro', 'D4n0', 'J4r0']
+        seq = 1
+
+        for node_id in node_ids:
+            conn.send_data(end_node.generate_regr(node_id))
+
+        while True:
+            for node_id in node_ids:
+                conn.send_data(end_node.generate_rxl(node_id, seq))
+            seq += 1
+            time.sleep(5)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
