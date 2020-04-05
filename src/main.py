@@ -1,9 +1,12 @@
 #!/usr/bin/python
 
+import getopt
+import sys
+import time
+
+from access_point import AccessPoint
 from connection_controller import ConnectionController
 from end_node import EndNode
-from access_point import AccessPoint
-import time, sys, getopt
 
 
 def main(argv):
@@ -24,26 +27,22 @@ def main(argv):
 
     if ap_id:
         access_point = AccessPoint(ap_id)
-        setr_message = access_point.generate_setr()
-        print(setr_message)
-        host = '147.175.149.229'
-        port = 25001
-
-        conn = ConnectionController(host, port)
+        conn = ConnectionController('147.175.149.229', 25001)
         conn.connect()
-        conn.send_data(setr_message)
-        end_node = EndNode()
+        conn.send_data(access_point.generate_setr())
 
         node_ids = ['yv4j', 'ALBY', 'QUFB', 'ALEX', 'Jaro', 'D4n0', 'J4r0']
-        seq = 1
+        nodes = []
 
         for node_id in node_ids:
-            conn.send_data(end_node.generate_regr(node_id))
+            nodes.append(EndNode(node_id))
+
+        for node in nodes:
+            conn.send_data(node.generate_regr())
 
         while True:
-            for node_id in node_ids:
-                conn.send_data(end_node.generate_rxl(node_id, seq))
-            seq += 1
+            for node in nodes:
+                conn.send_data(node.generate_rxl())
             time.sleep(5)
 
 

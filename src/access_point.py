@@ -1,5 +1,7 @@
 import json
 
+from lora import *
+
 
 class AccessPoint:
     def __init__(self, id):
@@ -10,16 +12,16 @@ class AccessPoint:
         message_body = {}
         lora_stand = {}
 
-        message['message_name'] = 'SETR'
+        message['message_name'] = MessageType.SETR.value
         message_body['id'] = self.id
-        message_body['ver'] = "1.0"
+        message_body['ver'] = LORA_VERSION
         message_body['m_chan'] = True
         message_body['channels'] = 8
-        message_body['sup_freqs'] = [863000000, 100000, 870000000]
-        message_body['sup_sfs'] = [7, 8, 9, 10, 11, 12]
-        message_body['sup_crs'] = ["4/5", "4/6", "4/7", "4/8"]
-        message_body['sup_bands'] = [500000, 250000, 125000]
-        message_body['max_power'] = 14
+        message_body['sup_freqs'] = FREQUENCIES
+        message_body['sup_sfs'] = SPREADING_FACTORS
+        message_body['sup_crs'] = CODING_RATES
+        message_body['sup_bands'] = BANDS
+        message_body['max_power'] = MAX_POWER
 
         lora_stand['name'] = "LoRa@FIIT"
         lora_stand['version'] = "1.0"
@@ -27,4 +29,7 @@ class AccessPoint:
         message_body['lora_stand'] = lora_stand
         message['message_body'] = message_body
 
-        return json.dumps(message, separators=(',', ':'))
+        json_message = json.dumps(message, separators=(',', ':'))
+        print(json_message)
+
+        return json_message
