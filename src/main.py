@@ -42,7 +42,13 @@ def main(argv):
 
         while True:
             for node in nodes:
-                conn.send_data(node.generate_rxl())
+                message = node.generate_rxl()
+
+                if message is None:
+                    print("WARNING: Message from node " + node.get_dev_id() + " could not be sent")
+                else:
+                    conn.send_data(message)
+
             time.sleep(5)
 
 

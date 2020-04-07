@@ -5,6 +5,9 @@ import math
 from enum import Enum
 
 DUTY_CYCLE = 3600
+BATTERY_FULL = 100
+MIN_HEART_RATE = 50
+MAX_HEART_RATE = 150
 LORA_VERSION = "1.0"
 CHANNELS = 8
 PRE_SHARED_KEY = '+/////v////7////+////wIAAAA='
