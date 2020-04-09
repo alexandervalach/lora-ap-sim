@@ -3,6 +3,7 @@
 import getopt
 import sys
 import time
+import json
 
 from access_point import AccessPoint
 from connection_controller import ConnectionController
@@ -12,9 +13,10 @@ from generator import load_nodes
 
 def main(argv):
     ap_id = ''
+    register_nodes = False
 
     try:
-        opts, args = getopt.getopt(argv, "hi:", ["id="])
+        opts, args = getopt.getopt(argv, "hi:r", ["id="])
     except getopt.GetoptError:
         print("main.py -i <access-point-id>")
         sys.exit(2)
@@ -25,12 +27,19 @@ def main(argv):
             sys.exit(0)
         elif opt in ("-i", "--id"):
             ap_id = arg
+        elif opt in ("-r", "--register"):
+            register_nodes = True
 
     if ap_id:
         access_point = AccessPoint(ap_id)
         conn = ConnectionController('147.175.149.229', 25001)
         conn.connect()
-        conn.send_data(access_point.generate_setr())
+        setr_message = access_point.generate_setr()
+        print(setr_message)
+        reply = conn.send_data(setr_message)
+
+        if reply is not None:
+            print("Reply: " + reply)
 
         node_ids = load_nodes("data/group1.txt")
         nodes = []
@@ -38,20 +47,29 @@ def main(argv):
         for node_id in node_ids:
             nodes.append(EndNode(node_id))
 
-        for node in nodes:
-            conn.send_data(node.generate_regr())
-            time.sleep(1)
+        if register_nodes:
+            for node in nodes:
+                regr_message = node.generate_regr()
+                print(regr_message)
+                reply = conn.send_data(regr_message)
+
+                if reply is not None:
+                    print("Reply: " + reply)
+                # time.sleep(1)
 
         while True:
             for node in nodes:
-                message = node.generate_rxl()
+                rxl_message = node.generate_rxl()
+                print(rxl_message)
 
-                if message is None:
+                if rxl_message is None:
                     print("WARNING: Message from node " + node.get_dev_id() + " could not be sent")
                 else:
-                    conn.send_data(message)
+                    reply = conn.send_data(rxl_message)
+                    if reply is not None:
+                        print("Reply: " + reply)
 
-            time.sleep(5)
+            time.sleep(1)
 
 
 if __name__ == "__main__":

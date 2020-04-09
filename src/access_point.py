@@ -30,6 +30,5 @@ class AccessPoint:
         message['message_body'] = message_body
 
         json_message = json.dumps(message, separators=(',', ':'))
-        print(json_message)
 
         return json_message
