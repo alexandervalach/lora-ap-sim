@@ -7,6 +7,7 @@ import time
 from access_point import AccessPoint
 from connection_controller import ConnectionController
 from end_node import EndNode
+from generator import load_nodes
 
 
 def main(argv):
@@ -31,7 +32,7 @@ def main(argv):
         conn.connect()
         conn.send_data(access_point.generate_setr())
 
-        node_ids = ['yv4j', 'ALBY', 'QUFB', 'ALEX', 'Jaro', 'D4n0', 'J4r0']
+        node_ids = load_nodes("data/group1.txt")
         nodes = []
 
         for node_id in node_ids:
@@ -39,6 +40,7 @@ def main(argv):
 
         for node in nodes:
             conn.send_data(node.generate_regr())
+            time.sleep(1)
 
         while True:
             for node in nodes:
