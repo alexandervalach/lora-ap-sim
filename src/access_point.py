@@ -1,5 +1,4 @@
 import json
-
 from lora import *
 
 
@@ -32,3 +31,21 @@ class AccessPoint:
         json_message = json.dumps(message, separators=(',', ':'))
 
         return json_message
+
+    def process_seta(self, json_message):
+        print("Processing SETA message")
+
+    def process_reply(self, reply):
+        if reply is not None:
+            print("Reply:\n" + reply)
+
+            try:
+                message = json.loads(reply)
+                message_name = message['message_name']
+
+                if message_name == 'SETA':
+                    self.process_seta(message)
+                else:
+                    print("Unknown message type")
+            except ValueError:
+                print("Could not deserialize JSON object")

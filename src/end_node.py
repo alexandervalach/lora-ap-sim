@@ -82,3 +82,26 @@ class EndNode:
 
         json_message = json.dumps(message, separators=(',', ':'))
         return json_message
+
+    def process_reply(self, reply):
+        if reply is not None:
+            print("Reply:\n" + reply)
+
+            try:
+                message = json.loads(reply)
+                message_name = message['message_name']
+
+                if message_name == 'REGA':
+                    self.process_rega(message)
+                elif message_name == 'TXL':
+                    self.process_txl(message)
+                else:
+                    print("Uknown message type")
+            except ValueError:
+                print("Could not deserialize JSON object")
+
+    def process_rega(self, json_message):
+        print("Processing REGA message")
+
+    def process_txl(self, json_message):
+        print("Processing TXL message")
