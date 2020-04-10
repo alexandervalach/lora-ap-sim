@@ -35,7 +35,7 @@ class AccessPoint:
         return json_message
 
     def process_seta(self, message):
-        print("Processing SETA message...\n")
+        print("Processing SETA message...")
         body = message['message_body']
         print("Body:")
         print(body)

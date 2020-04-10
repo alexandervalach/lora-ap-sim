@@ -4,11 +4,9 @@ from lora import *
 
 
 class EndNode:
-    def __init__(self, dev_id, seq=1, sf=SpreadingFactors.SF7.value, power=Power.PW14.value):
+    def __init__(self, dev_id, seq=1):
         self.dev_id = dev_id
         self.seq = seq
-        self.sf = sf
-        self.power = power
         self.battery_level = BATTERY_FULL
         self.duty_cycle = DUTY_CYCLE
         self.is_mobile = False
@@ -30,18 +28,19 @@ class EndNode:
         else:
             return None
 
-        message['message_name'] = MessageType.REGR.value
-        message_body['band'] = Bandwidth.BW125.value
-        message_body['cr'] = CodingRates.CR45.value
+        message_body['band'] = self.net_config['reg']['band']
+        message_body['cr'] = self.net_config['reg']['cr']
         message_body['dev_id'] = self.dev_id
-        message_body['power'] = self.power
+        message_body['power'] = self.net_config['reg']['power']
         message_body['duty_c'] = self.duty_cycle
         message_body['rssi'] = LoRa.get_rssi()
-        message_body['sf'] = self.sf
+        message_body['sf'] = self.net_config['reg']['sf']
         message_body['snr'] = LoRa.get_snr()
         message_body['time'] = time
         message_body['app_data'] = app_data
         message_body['sh_key'] = PRE_SHARED_KEY
+
+        message['message_name'] = MessageType.REGR.value
         message['message_body'] = message_body
 
         json_message = json.dumps(message, separators=(',', ':'))
@@ -58,8 +57,6 @@ class EndNode:
 
         data = LoRa.get_data(heart_rate, self.battery_level)
 
-        message['message_name'] = MessageType.RXL.value
-
         if is_emergency:
             message_body['ack'] = Acknowledgement.MANDATORY.value
         else:
@@ -73,18 +70,20 @@ class EndNode:
         else:
             return None
 
-        message_body['band'] = Bandwidth.BW125.value
+        message_body['band'] = self.net_config['normal']['band']
         message_body['conf_need'] = False
-        message_body['cr'] = CodingRates.CR45.value
+        message_body['cr'] = self.net_config['normal']['cr']
         message_body['data'] = data
         message_body['dev_id'] = self.dev_id
         message_body['duty_c'] = self.duty_cycle
-        message_body['power'] = self.power
+        message_body['power'] = self.net_config['normal']['power']
         message_body['rssi'] = LoRa.get_rssi()
         message_body['seq'] = self.seq
-        message_body['sf'] = self.sf
+        message_body['sf'] = self.net_config['normal']['sf']
         message_body['snr'] = LoRa.get_snr()
         message_body['time'] = time
+
+        message['message_name'] = MessageType.RXL.value
         message['message_body'] = message_body
 
         self.seq += 1
@@ -95,6 +94,7 @@ class EndNode:
     def process_reply(self, reply):
         try:
             if reply is not None:
+                # First { is doubled for unknown reason, remove it
                 reply = reply[1:]
                 message = json.loads(reply)
                 message_name = message['message_name']
@@ -104,20 +104,40 @@ class EndNode:
                 elif message_name == 'TXL':
                     self.process_txl(message)
                 else:
-                    print("Uknown message type")
+                    print("Unknown message type")
         except ValueError:
             print("Could not deserialize JSON object")
         except TypeError:
             print("TypeError")
 
     def process_rega(self, message):
-        print("Processing REGA message...\n")
+        print('Processing REGA message for node {0}...'.format(self.dev_id))
         body = message['message_body']
         print("Body:")
         print(body)
 
     def process_txl(self, message):
-        print("Processing TXL message...\n")
+        print('Processing TXL message for node {0}...'.format(self.dev_id))
         body = message['message_body']
-        print("Body:")
-        print(body)
+        dev_id = body['dev_id']
+
+        if dev_id == self.dev_id:
+            if body['app_data']:
+                app_data = body['app_data']
+
+            if body['net_data']:
+                net_data = body['net_data']
+
+                for data in net_data:
+                    net_config_type = data['type'].lower()
+
+                    if data['sf']:
+                        self.net_config[net_config_type]['sf'] = data['sf']
+                        print('SF updated to {0} for node {1}'.format(data['sf'], self.dev_id))
+
+                    if data['power']:
+                        self.net_config[net_config_type]['power'] = data['power']
+                        print('PWR updated to {0} for node {1}'.format(data['power'], self.dev_id))
+        else:
+            print("Different DEV_IDs:")
+            print(dev_id, self.dev_id)

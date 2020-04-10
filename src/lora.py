@@ -115,26 +115,26 @@ class Power(Enum):
 
 
 NET_CONFIG = {
-    'data': {
+    'normal': {
         'freq': [],
-        'bw': Bandwidth.BW125.value,
+        'band': Bandwidth.BW125.value,
         'cr': CodingRates.CR45.value,
         'sf': SpreadingFactors.SF7.value,
-        'pw': Power.PW14.value
+        'power': Power.PW14.value
     },
     'reg': {
         'freq': [],
-        'bw': Bandwidth.BW125.value,
+        'band': Bandwidth.BW125.value,
         'cr': CodingRates.CR45.value,
         'sf': SpreadingFactors.SF7.value,
-        'pw': Power.PW14.value
+        'power': Power.PW14.value
     },
     'emer': {
         'freq': [],
-        'bw': Bandwidth.BW125.value,
+        'band': Bandwidth.BW125.value,
         'cr': CodingRates.CR45.value,
         'sf': SpreadingFactors.SF7.value,
-        'pw': Power.PW14.value
+        'power': Power.PW14.value
     }
 }
 
