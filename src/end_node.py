@@ -50,26 +50,21 @@ class EndNode:
         message = {}
         message_body = {}
         heart_rate = random.randint(MIN_HEART_RATE, MAX_HEART_RATE)
-        is_emergency = False
 
         if heart_rate < 60 or heart_rate > 145:
-            is_emergency = True
+            return self.generate_emer_rxl(heart_rate)
 
         data = LoRa.get_data(heart_rate, self.battery_level)
-
-        if is_emergency:
-            message_body['ack'] = Acknowledgement.MANDATORY.value
-        else:
-            message_body['ack'] = Acknowledgement.NO_ACK.value
-
         time = LoRa.get_time(len(data))
 
         """ TODO: Refresh duty cycle """
         if self.duty_cycle - time > 0:
             self.duty_cycle -= time
         else:
+            self.seq += 1
             return None
 
+        message_body['ack'] = Acknowledgement.NO_ACK.value
         message_body['band'] = self.net_config['normal']['band']
         message_body['conf_need'] = False
         message_body['cr'] = self.net_config['normal']['cr']
@@ -80,6 +75,42 @@ class EndNode:
         message_body['rssi'] = LoRa.get_rssi()
         message_body['seq'] = self.seq
         message_body['sf'] = self.net_config['normal']['sf']
+        message_body['snr'] = LoRa.get_snr()
+        message_body['time'] = time
+
+        message['message_name'] = MessageType.RXL.value
+        message['message_body'] = message_body
+
+        self.seq += 1
+
+        json_message = json.dumps(message, separators=(',', ':'))
+        return json_message
+
+    def generate_emer_rxl(self, heart_rate):
+        message = {}
+        message_body = {}
+
+        data = LoRa.get_data(heart_rate, self.battery_level)
+        time = LoRa.get_time(len(data))
+
+        """ TODO: Refresh duty cycle """
+        if self.duty_cycle - time > 0:
+            self.duty_cycle -= time
+        else:
+            self.seq += 1
+            return None
+
+        message_body['ack'] = Acknowledgement.MANDATORY.value
+        message_body['band'] = self.net_config['emer']['band']
+        message_body['conf_need'] = False
+        message_body['cr'] = self.net_config['emer']['cr']
+        message_body['data'] = data
+        message_body['dev_id'] = self.dev_id
+        message_body['duty_c'] = self.duty_cycle
+        message_body['power'] = self.net_config['emer']['power']
+        message_body['rssi'] = LoRa.get_rssi()
+        message_body['seq'] = self.seq
+        message_body['sf'] = self.net_config['emer']['sf']
         message_body['snr'] = LoRa.get_snr()
         message_body['time'] = time
 
@@ -113,8 +144,42 @@ class EndNode:
     def process_rega(self, message):
         print('Processing REGA message for node {0}...'.format(self.dev_id))
         body = message['message_body']
-        print("Body:")
-        print(body)
+        dev_id = body['dev_id']
+
+        if dev_id == self.dev_id:
+            if body['app_data']:
+                app_data = body['app_data']
+
+            if body['net_data']:
+                net_data = body['net_data']
+
+                for data in net_data:
+                    net_config_type = data['type'].lower()
+
+                    print('Network Data Type: {0}'.format(data['type']))
+
+                    if data['sf']:
+                        self.net_config[net_config_type]['sf'] = data['sf']
+                        print('SF set to {0} for node {1}'.format(data['sf'], self.dev_id))
+
+                    if data['power']:
+                        self.net_config[net_config_type]['power'] = data['power']
+                        print('PWR set to {0} for node {1}'.format(data['power'], self.dev_id))
+
+                    if data['cr']:
+                        self.net_config[net_config_type]['cr'] = data['cr']
+                        print('CR set to {0} for node {1}'.format(data['cr'], self.dev_id))
+
+                    if data['band']:
+                        self.net_config[net_config_type]['band'] = data['band']
+                        print('BW set to {0} for node {1}'.format(data['band'], self.dev_id))
+
+                    if data['freqs']:
+                        self.net_config[net_config_type]['freqs'] = data['freqs']
+                        print('FREQS set for node {1}'.format(data['freqs'], self.dev_id))
+        else:
+            print("Different DEV_IDs:")
+            print(dev_id, self.dev_id)
 
     def process_txl(self, message):
         print('Processing TXL message for node {0}...'.format(self.dev_id))
