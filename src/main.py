@@ -50,8 +50,8 @@ def main(argv):
         if register_nodes:
             for node in nodes:
                 regr_message = node.generate_regr()
-                print(regr_message)
-                node.process_reply(conn.send_data(regr_message))
+                reply = conn.send_data(regr_message)
+                node.process_reply(reply)
                 time.sleep(1)
 
         while True:

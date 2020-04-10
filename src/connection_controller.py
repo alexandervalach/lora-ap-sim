@@ -1,5 +1,6 @@
 import socket
 import ssl
+import time
 
 
 class ConnectionController:
@@ -24,11 +25,32 @@ class ConnectionController:
         self.conn.send(data)
 
         try:
-            reply = self.conn.recv(1280)
-            return reply
+            reply = self.recv()
+            if reply is not None:
+                print("Reply:\n" + reply)
+                return reply
+            else:
+                return None
         except ssl.SSLError as s:
             print("No reply from network server")
             return None
 
     def close(self):
         self.conn.close()
+
+    def recv(self):
+        try:
+            text = ''
+            chunk = ''
+            while True:
+                chunk += self.conn.recv()
+                if not chunk:
+                    # Unreliable
+                    break
+                else:
+                    text += chunk
+        except Exception:
+            if text:
+                return text
+            else:
+                return None

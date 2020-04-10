@@ -109,7 +109,34 @@ class Power(Enum):
         return int(self)
 
     PW14 = 14
+    PW13 = 13
+    PW12 = 12
+    PW11 = 11
 
+
+NET_CONFIG = {
+    'data': {
+        'freq': [],
+        'bw': Bandwidth.BW125.value,
+        'cr': CodingRates.CR45.value,
+        'sf': SpreadingFactors.SF7.value,
+        'pw': Power.PW14.value
+    },
+    'reg': {
+        'freq': [],
+        'bw': Bandwidth.BW125.value,
+        'cr': CodingRates.CR45.value,
+        'sf': SpreadingFactors.SF7.value,
+        'pw': Power.PW14.value
+    },
+    'emer': {
+        'freq': [],
+        'bw': Bandwidth.BW125.value,
+        'cr': CodingRates.CR45.value,
+        'sf': SpreadingFactors.SF7.value,
+        'pw': Power.PW14.value
+    }
+}
 
 MAX_POWER = Power.PW14.value
 

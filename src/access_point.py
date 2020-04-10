@@ -1,10 +1,12 @@
 import json
+
 from lora import *
 
 
 class AccessPoint:
     def __init__(self, id):
         self.id = id
+        self.net_config = NET_CONFIG
 
     def generate_setr(self):
         message = {}
@@ -32,20 +34,20 @@ class AccessPoint:
 
         return json_message
 
-    def process_seta(self, json_message):
-        print("Processing SETA message")
+    def process_seta(self, message):
+        print("Processing SETA message...\n")
+        body = message['message_body']
+        print("Body:")
+        print(body)
 
     def process_reply(self, reply):
-        if reply is not None:
-            print("Reply:\n" + reply)
+        try:
+            message = json.loads(reply)
+            message_name = message['message_name']
 
-            try:
-                message = json.loads(reply)
-                message_name = message['message_name']
-
-                if message_name == 'SETA':
-                    self.process_seta(message)
-                else:
-                    print("Unknown message type")
-            except ValueError:
-                print("Could not deserialize JSON object")
+            if message_name == 'SETA':
+                self.process_seta(message)
+            else:
+                print("Unknown message type")
+        except ValueError:
+            print("Could not deserialize JSON object")

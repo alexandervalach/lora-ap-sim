@@ -11,6 +11,8 @@ class EndNode:
         self.power = power
         self.battery_level = BATTERY_FULL
         self.duty_cycle = DUTY_CYCLE
+        self.is_mobile = False
+        self.net_config = NET_CONFIG
 
     def get_dev_id(self):
         return self.dev_id
@@ -20,6 +22,13 @@ class EndNode:
         message_body = {}
 
         app_data = LoRa.get_data()
+        time = LoRa.get_time(len(app_data))
+
+        """ TODO: Refresh duty cycle """
+        if self.duty_cycle - time > 0:
+            self.duty_cycle -= time
+        else:
+            return None
 
         message['message_name'] = MessageType.REGR.value
         message_body['band'] = Bandwidth.BW125.value
@@ -30,7 +39,7 @@ class EndNode:
         message_body['rssi'] = LoRa.get_rssi()
         message_body['sf'] = self.sf
         message_body['snr'] = LoRa.get_snr()
-        message_body['time'] = LoRa.get_time(len(app_data))
+        message_body['time'] = time
         message_body['app_data'] = app_data
         message_body['sh_key'] = PRE_SHARED_KEY
         message['message_body'] = message_body
@@ -75,7 +84,7 @@ class EndNode:
         message_body['seq'] = self.seq
         message_body['sf'] = self.sf
         message_body['snr'] = LoRa.get_snr()
-        message_body['time'] = LoRa.get_time(len(data))
+        message_body['time'] = time
         message['message_body'] = message_body
 
         self.seq += 1
@@ -84,10 +93,9 @@ class EndNode:
         return json_message
 
     def process_reply(self, reply):
-        if reply is not None:
-            print("Reply:\n" + reply)
-
-            try:
+        try:
+            if reply is not None:
+                reply = reply[1:]
                 message = json.loads(reply)
                 message_name = message['message_name']
 
@@ -97,11 +105,19 @@ class EndNode:
                     self.process_txl(message)
                 else:
                     print("Uknown message type")
-            except ValueError:
-                print("Could not deserialize JSON object")
+        except ValueError:
+            print("Could not deserialize JSON object")
+        except TypeError:
+            print("TypeError")
 
-    def process_rega(self, json_message):
-        print("Processing REGA message")
+    def process_rega(self, message):
+        print("Processing REGA message...\n")
+        body = message['message_body']
+        print("Body:")
+        print(body)
 
-    def process_txl(self, json_message):
-        print("Processing TXL message")
+    def process_txl(self, message):
+        print("Processing TXL message...\n")
+        body = message['message_body']
+        print("Body:")
+        print(body)
