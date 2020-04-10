@@ -11,6 +11,7 @@ class EndNode:
         self.duty_cycle = DUTY_CYCLE
         self.is_mobile = False
         self.net_config = NET_CONFIG
+        self.duty_cycle_refresh = LoRa.get_current_time()
 
     def get_dev_id(self):
         return self.dev_id
@@ -22,10 +23,7 @@ class EndNode:
         app_data = LoRa.get_data()
         time = LoRa.get_time(len(app_data))
 
-        """ TODO: Refresh duty cycle """
-        if self.duty_cycle - time > 0:
-            self.duty_cycle -= time
-        else:
+        if self.calculate_duty_cycle(time) is None:
             return None
 
         message_body['band'] = self.net_config['reg']['band']
@@ -52,16 +50,12 @@ class EndNode:
         heart_rate = random.randint(MIN_HEART_RATE, MAX_HEART_RATE)
 
         if heart_rate < 60 or heart_rate > 145:
-            return self.generate_emer_rxl(heart_rate)
+            return self.generate_emer(heart_rate)
 
         data = LoRa.get_data(heart_rate, self.battery_level)
         time = LoRa.get_time(len(data))
 
-        """ TODO: Refresh duty cycle """
-        if self.duty_cycle - time > 0:
-            self.duty_cycle -= time
-        else:
-            self.seq += 1
+        if self.calculate_duty_cycle(time) is None:
             return None
 
         message_body['ack'] = Acknowledgement.NO_ACK.value
@@ -86,18 +80,14 @@ class EndNode:
         json_message = json.dumps(message, separators=(',', ':'))
         return json_message
 
-    def generate_emer_rxl(self, heart_rate):
+    def generate_emer(self, heart_rate):
         message = {}
         message_body = {}
 
         data = LoRa.get_data(heart_rate, self.battery_level)
         time = LoRa.get_time(len(data))
 
-        """ TODO: Refresh duty cycle """
-        if self.duty_cycle - time > 0:
-            self.duty_cycle -= time
-        else:
-            self.seq += 1
+        if self.calculate_duty_cycle(time) is None:
             return None
 
         message_body['ack'] = Acknowledgement.MANDATORY.value
@@ -206,3 +196,15 @@ class EndNode:
         else:
             print("Different DEV_IDs:")
             print(dev_id, self.dev_id)
+
+    def calculate_duty_cycle(self, time):
+        if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):
+            print('Duty cycle refresh for node {0}'.format(self.dev_id))
+            self.duty_cycle = DUTY_CYCLE
+
+        if self.duty_cycle - time > 0:
+            self.duty_cycle -= time
+            return 0
+        else:
+            self.seq += 1
+            return None

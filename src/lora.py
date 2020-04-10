@@ -1,6 +1,8 @@
 import random
 import base64
 import math
+import time
+from datetime import datetime
 
 from enum import Enum
 
@@ -42,6 +44,31 @@ class LoRa:
         base64_bytes = base64.b64encode(message_bytes)
         return base64_bytes
 
+    @staticmethod
+    def get_current_time():
+        return time.strftime("%M:%S")
+
+    @staticmethod
+    def duty_cycle_difference(time1, time2):
+        fmt = '%M:%S'
+        tstamp1 = datetime.strptime(time1, fmt)
+        tstamp2 = datetime.strptime(time2, fmt)
+
+        if tstamp1 > tstamp2:
+            td = tstamp1 - tstamp2
+        else:
+            td = tstamp2 - tstamp1
+
+        return int(round(td.total_seconds() / 60))
+
+    @staticmethod
+    def should_refresh_duty_cycle(refresh_time):
+        diff = LoRa.duty_cycle_difference(refresh_time, LoRa.get_current_time())
+        # print(diff)
+        if diff >= 59:
+            return True
+        else:
+            return False
 
 class Acknowledgement(Enum):
     def __str__(self):
