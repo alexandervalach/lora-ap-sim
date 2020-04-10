@@ -3,6 +3,7 @@
 import getopt
 import sys
 import time
+import random
 
 from access_point import AccessPoint
 from connection_controller import ConnectionController
@@ -40,6 +41,7 @@ def main(argv):
         access_point.process_reply(conn.send_data(setr_message))
 
         node_ids = load_nodes("data/group1.txt")
+        random.shuffle(node_ids)
         nodes = []
 
         for node_id in node_ids:
