@@ -46,7 +46,8 @@ class LoRa:
 
     @staticmethod
     def get_current_time():
-        return time.strftime("%M:%S")
+        now = datetime.now().time()
+        return now.strftime("%M:%S")
 
     @staticmethod
     def duty_cycle_difference(time1, time2):
