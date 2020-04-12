@@ -30,24 +30,24 @@ class AccessPoint:
         message_body['lora_stand'] = lora_stand
         message['message_body'] = message_body
 
-        json_message = json.dumps(message, separators=(',', ':'))
-
-        return json_message
+        json_message = json.dumps(message, separators=(',', ':'), sort_keys=True)
+        return json_message.encode('ascii')
 
     def process_seta(self, message):
         print("Processing SETA message...")
         body = message['message_body']
-        print("Body:")
-        print(body)
 
     def process_reply(self, reply):
-        try:
-            message = json.loads(reply)
-            message_name = message['message_name']
+        if reply is not None:
+            try:
+                message = json.loads(str(reply, 'ascii'))
+                message_name = message['message_name']
 
-            if message_name == 'SETA':
-                self.process_seta(message)
-            else:
-                print("Unknown message type")
-        except ValueError:
-            print("Could not deserialize JSON object")
+                if message_name == 'SETA':
+                    self.process_seta(message)
+                else:
+                    print("Unknown message type")
+            except ValueError:
+                print("Could not deserialize JSON object")
+        else:
+            print("No reply")

@@ -37,7 +37,9 @@ class EndNode:
         time = LoRa.calculate_time_on_air(len(app_data), sf, band, cr, 1)
 
         # Check if there is remaining duty cycle, additionally perform refresh
-        if self.get_remaining_duty_cycle(time) == 0:
+        self.set_remaining_duty_cycle(time)
+        print(self.duty_cycle)
+        if self.duty_cycle == 0:
             return None
 
         message_body['band'] = band
@@ -59,8 +61,8 @@ class EndNode:
         elif config_type == 'reg':
             message = self.generate_regr(message, app_data)
 
-        json_message = json.dumps(message, separators=(',', ':'))
-        return json_message
+        json_message = json.dumps(message, separators=(',', ':'), sort_keys=True)
+        return json_message.encode('ascii')
 
     def generate_regr(self, message, app_data):
         message['message_name'] = MessageType.REGR.value
@@ -171,14 +173,12 @@ class EndNode:
             print("Different DEV_IDs:")
             print(dev_id, self.dev_id)
 
-    def get_remaining_duty_cycle(self, time):
+    def set_remaining_duty_cycle(self, time):
         if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):
             print('Duty cycle refresh for node {0}'.format(self.dev_id))
             self.duty_cycle = DUTY_CYCLE
 
         if self.duty_cycle - time > 0:
             self.duty_cycle -= time
-            return self.duty_cycle
         else:
             self.seq += 1
-            return 0

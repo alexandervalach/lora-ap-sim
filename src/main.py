@@ -2,6 +2,7 @@
 
 import getopt
 import sys
+import time
 import random
 
 from access_point import AccessPoint
@@ -45,9 +46,12 @@ def main(argv):
         access_point = AccessPoint(ap_id)
         conn = ConnectionController('147.175.149.229', 25001)
         conn.connect()
+
         setr_message = access_point.generate_setr()
-        print(setr_message)
-        access_point.process_reply(conn.send_data(setr_message))
+
+        if setr_message is not None:
+            print(str(setr_message, 'ascii'))
+            access_point.process_reply(conn.send_data(setr_message))
 
         node_ids = load_nodes(node_file)
 
@@ -62,22 +66,26 @@ def main(argv):
         if register_nodes:
             for node in nodes:
                 regr_message = node.generate_message('reg')
-                print(regr_message)
-                reply = conn.send_data(regr_message)
-                node.process_reply(reply)
-                # time.sleep(1)
+
+                if regr_message is None:
+                    print("WARNING: Message from node " + node.get_dev_id() + " could not be sent")
+                else:
+                    print(str(regr_message, 'ascii'))
+                    reply = conn.send_data(regr_message)
+                    node.process_reply(reply)
+                time.sleep(1)
 
         while True:
             for node in nodes:
                 rxl_message = node.generate_message('normal')
-                print(rxl_message)
 
                 if rxl_message is None:
                     print("WARNING: Message from node " + node.get_dev_id() + " could not be sent")
                 else:
+                    print(str(rxl_message, 'ascii'))
                     node.process_reply(conn.send_data(rxl_message))
 
-            # time.sleep(1)
+            time.sleep(1)
 
 
 if __name__ == "__main__":

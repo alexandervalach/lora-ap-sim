@@ -48,8 +48,7 @@ class LoRa:
         """
         message = str(heart_rate) + "," + str(battery_level)
         message_bytes = message.encode('ascii')
-        base64_bytes = base64.b64encode(message_bytes)
-        return base64_bytes
+        return base64.b64encode(message_bytes).decode('ascii')
 
     @staticmethod
     def calculate_time_on_air(data_len, sf, bw, cr, percentage):
@@ -84,11 +83,11 @@ class LoRa:
         payload = (8 + max(payload_symb_nb * cr, 0)) * time_per_symbol
 
         if percentage == 0:
-            return (payload + time_per_preamble) / 0.001
+            return round((payload + time_per_preamble) / 0.001)
         elif percentage == 1:
-            return (payload + time_per_preamble) / 0.01
+            return round((payload + time_per_preamble) / 0.01)
         elif percentage == 10:
-            return (payload + time_per_preamble) / 0.1
+            return round((payload + time_per_preamble) / 0.1)
 
     @staticmethod
     def get_current_time():
