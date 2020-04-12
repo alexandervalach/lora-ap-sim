@@ -62,32 +62,18 @@ class LoRa:
         :return: 
         """""
         cr = LoRa.get_coding_rate_value(cr)
-        time_per_symbol = 1000 * pow(2, sf) / bw
+        time_per_symbol = pow(2, sf) / (bw / 1000)
+
+        lora_fiit_overhead = 12
 
         if sf > SpreadingFactors.SF10.value:
             optimization = 1
         else:
             optimization = 0
 
-        time_per_preamble = (8 + 4.25) * time_per_symbol
-        payload_symb_nb = 8 * data_len - 4 * sf + 28 + 16
-        payload_symb_nb /= (4 * (sf - 2 * optimization))
+        message_symbols = 8 + ((8 * (lora_fiit_overhead + data_len) - 4 * sf + 28 + 16) / (4 * (sf - 2 * optimization))) * (cr + 4)
 
-        temp = round(payload_symb_nb)
-
-        if temp < payload_symb_nb:
-            payload_symb_nb = temp + 1
-        else:
-            payload_symb_nb = temp
-
-        payload = (8 + max(payload_symb_nb * cr, 0)) * time_per_symbol
-
-        if percentage == 0:
-            return round((payload + time_per_preamble) / 0.001)
-        elif percentage == 1:
-            return round((payload + time_per_preamble) / 0.01)
-        elif percentage == 10:
-            return round((payload + time_per_preamble) / 0.1)
+        return round(time_per_symbol * message_symbols)
 
     @staticmethod
     def get_current_time():
@@ -134,13 +120,13 @@ class LoRa:
     @staticmethod
     def get_coding_rate_value(cr):
         if cr == CodingRates.CR45.value:
-            return 5.0
+            return 1.0
         elif cr == CodingRates.CR46.value:
-            return 6.0
+            return 2.0
         elif cr == CodingRates.CR47.value:
-            return 7.0
+            return 3.0
         elif cr == CodingRates.CR48.value:
-            return 8.0
+            return 4.0
 
 
 class Acknowledgement(Enum):
