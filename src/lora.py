@@ -198,6 +198,11 @@ class Frequencies(Enum):
     F1 = 100000
     F863 = 863000000
     F870 = 870000000
+    F8661 = 866100000
+    F8665 = 866500000
+    F8667 = 866700000
+    F8669 = 866900000
+    F8638 = 863800000
 
 
 class Bandwidth(Enum):
@@ -224,7 +229,7 @@ NET_CONFIG = {
         'band': Bandwidth.BW125.value,
         'cr': CodingRates.CR45.value,
         'sf': SpreadingFactors.SF7.value,
-        'power': Power.PW14.value
+        'power': Power.PW13.value
     },
     'reg': {
         'freqs': [],

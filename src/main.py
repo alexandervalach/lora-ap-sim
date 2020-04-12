@@ -2,7 +2,6 @@
 
 import getopt
 import sys
-import time
 import random
 
 from access_point import AccessPoint
@@ -17,9 +16,9 @@ def main(argv):
     shuffle_nodes = False
     node_file = "data/group1.txt"
 
-    """ Reading arguments from command line """
+    # Reading arguments from command line
     try:
-        opts, args = getopt.getopt(argv, "hi:rsf:", ["id=", "file="])
+        opts, args = getopt.getopt(argv, "hi:rsf:a", ["id=", "file=", "help", "register", "shuffle"])
     except getopt.GetoptError:
         print("main.py -i <access-point-id> [-r -s]")
         sys.exit(2)
@@ -28,20 +27,20 @@ def main(argv):
         if opt == '-h':
             print("main.py -i <access-point-id>\n")
             print("-i <dev_id>, --id=<dev_id>\t- Specify LoRa AP hardware id")
-            print("-r, --register\t\t- Include device register process")
+            print("-r, --register\t\t- Include end nodes registration process")
             print("-s, --shuffle\t\t- Shuffle list of end nodes")
             print("-f <file_path>, --file=<file_path>\t- Specify LoRa node id file")
             sys.exit(0)
         elif opt in ("-i", "--id"):
             ap_id = arg
-        elif opt in ("-r", "--register"):
+        elif opt in ("-r", "--regen"):
             register_nodes = True
         elif opt in ("-s", "--shuffle"):
             shuffle_nodes = True
         elif opt in ("-f", "--file"):
             node_file = arg
 
-    """ If there was an AP id defined """
+    # If there was an AP id defined
     if ap_id:
         access_point = AccessPoint(ap_id)
         conn = ConnectionController('147.175.149.229', 25001)
@@ -66,7 +65,7 @@ def main(argv):
                 print(regr_message)
                 reply = conn.send_data(regr_message)
                 node.process_reply(reply)
-                time.sleep(1)
+                # time.sleep(1)
 
         while True:
             for node in nodes:
@@ -78,7 +77,7 @@ def main(argv):
                 else:
                     node.process_reply(conn.send_data(rxl_message))
 
-            time.sleep(1)
+            # time.sleep(1)
 
 
 if __name__ == "__main__":
