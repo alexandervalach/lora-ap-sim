@@ -62,7 +62,7 @@ def main(argv):
 
         if register_nodes:
             for node in nodes:
-                regr_message = node.generate_regr()
+                regr_message = node.generate_message('reg')
                 print(regr_message)
                 reply = conn.send_data(regr_message)
                 node.process_reply(reply)
@@ -70,7 +70,7 @@ def main(argv):
 
         while True:
             for node in nodes:
-                rxl_message = node.generate_rxl()
+                rxl_message = node.generate_message('normal')
                 print(rxl_message)
 
                 if rxl_message is None:

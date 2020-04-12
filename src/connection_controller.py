@@ -15,7 +15,7 @@ class ConnectionController:
     def connect(self):
         try:
             self.conn.connect((self.host, self.port))
-        except InterruptedError as e:
+        except Exception as e:
             print("An error occurred during a connection attempt")
             print(e)
         # finally:
