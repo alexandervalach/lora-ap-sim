@@ -1,21 +1,19 @@
 # LoRa@FIIT Access Point and End Nodes simulator
 STIoT packet generator which simulates LoRa@FIIT wireless access point.
 
-Supported features:
+## Supported features and TODO
 
-[X] Pseudo-random RSSI, SNR generation 
-[X] Processing network data from network server to adapt communication parameters
-[X] Sending also frequency to improve channel utilization
-[X] Emergency message support
-[X] End node duty cycle constraints and refresh
-[X] Command line interface
+- [X] Pseudo-random RSSI, SNR generation 
+- [X] Processing network data from network server to adapt communication parameters
+- [X] Sending also frequency to improve channel utilization
+- [X] Emergency message support
+- [X] End node duty cycle constraints and refresh
+- [X] Command line interface
+- [ ] Non-blocking socket communication to improve scalability
+- [ ] Differentiate between static and mobile node parameter selection
+- [ ] Access Point duty cycle  contraints and refresh
+- [ ] Multiaccess point command line usafe
 
-TODO:
-
-[] Non-blocking socket communication to improve scalability
-[] Differentiate between static and mobile node parameter selection
-[] Access Point duty cycle  contraints and refresh
-[] Multiaccess point command line usafe
 
 ## Command line interface
 main.py -i <access-point-id>
