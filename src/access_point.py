@@ -18,7 +18,7 @@ class AccessPoint:
         message_body['ver'] = LORA_VERSION
         message_body['m_chan'] = True
         message_body['channels'] = 8
-        message_body['sup_freqs'] = FREQUENCIES
+        message_body['sup_freqs'] = SUP_FREQUENCIES
         message_body['sup_sfs'] = SPREADING_FACTORS
         message_body['sup_crs'] = CODING_RATES
         message_body['sup_bands'] = BANDS

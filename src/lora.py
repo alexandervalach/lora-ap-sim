@@ -180,14 +180,14 @@ class Frequencies(Enum):
     def __int__(self):
         return int(self.value)
 
-    F1 = 100000
-    F863 = 863000000
-    F870 = 870000000
+    # normal
     F8661 = 866100000
+    F8663 = 866300000
     F8665 = 866500000
-    F8667 = 866700000
+    # emergency
     F8669 = 866900000
-    F8638 = 863800000
+    # register
+    F8667 = 866700000
 
 
 class Bandwidth(Enum):
@@ -208,23 +208,35 @@ class Power(Enum):
     PW12 = 12
 
 
+# From lora AP concentrator
+SUP_FREQUENCIES = [863000000, 100000, 870000000]
+
+REG_FREQUENCIES = [Frequencies.F8667.value]
+EMER_FREQUENCIES = [Frequencies.F8669.value]
+
+NORMAL_FREQUENCIES = [
+    Frequencies.F8661.value,
+    Frequencies.F8663.value,
+    Frequencies.F8665.value
+]
+
 NET_CONFIG = {
     'normal': {
-        'freqs': [],
+        'freqs': NORMAL_FREQUENCIES,
         'band': Bandwidth.BW125.value,
         'cr': CodingRates.CR45.value,
         'sf': SpreadingFactors.SF7.value,
         'power': Power.PW13.value
     },
     'reg': {
-        'freqs': [],
+        'freqs': REG_FREQUENCIES,
         'band': Bandwidth.BW125.value,
         'cr': CodingRates.CR45.value,
         'sf': SpreadingFactors.SF7.value,
         'power': Power.PW14.value
     },
     'emer': {
-        'freqs': [],
+        'freqs': EMER_FREQUENCIES,
         'band': Bandwidth.BW125.value,
         'cr': CodingRates.CR45.value,
         'sf': SpreadingFactors.SF7.value,
@@ -235,9 +247,10 @@ NET_CONFIG = {
 MAX_POWER = Power.PW14.value
 
 FREQUENCIES = [
-    Frequencies.F863.value,
-    Frequencies.F1.value,
-    Frequencies.F870.value
+    Frequencies.F8667.value,
+    Frequencies.F8661.value,
+    Frequencies.F8663.value,
+    Frequencies.F8669.value
 ]
 
 SPREADING_FACTORS = [

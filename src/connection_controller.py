@@ -6,7 +6,7 @@ import time
 class ConnectionController:
     def __init__(self, host, port):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(2)
+        s.settimeout(10)
 
         self.conn = ssl.wrap_socket(s, ssl_version=ssl.PROTOCOL_TLSv1)
         self.host = host

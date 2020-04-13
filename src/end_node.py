@@ -13,6 +13,7 @@ class EndNode:
         self.net_config = NET_CONFIG
         self.duty_cycle_refresh = LoRa.get_current_time()
         self.pre_shared_key = PRE_SHARED_KEY
+        self.freq = REG_FREQUENCIES[0]
 
     def get_dev_id(self):
         return self.dev_id
@@ -33,6 +34,7 @@ class EndNode:
         band = self.net_config[config_type]['band']
         cr = self.net_config[config_type]['cr']
         power = self.net_config[config_type]['power']
+        freq = self.net_config[config_type]['freqs'][0]
 
         time = LoRa.calculate_time_on_air(len(app_data), sf, band, cr, 1)
 
@@ -42,6 +44,7 @@ class EndNode:
         if self.duty_cycle == 0:
             return None
 
+        message_body['freq'] = freq
         message_body['band'] = band
         message_body['cr'] = cr
         message_body['dev_id'] = self.dev_id
