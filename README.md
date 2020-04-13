@@ -16,9 +16,14 @@ STIoT packet generator which simulates LoRa@FIIT wireless access point.
 
 
 ## Command line interface
+```
 main.py -i <access-point-id>
 
 -i <dev_id>, --id=<dev_id> - Specify LoRa AP hardware id
+
 -r, --register - Include end nodes registration process
+
 -s, --shuffle - Shuffle list of end nodes
--f <file_path>, --file=<file_path> - Specify LoRa node id file using relative or absolute file path (default is data/group1.txt)
+
+-f <file_path>, --file=<file_path> - Specify LoRa node id file
+```
