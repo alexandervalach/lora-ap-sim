@@ -1,12 +1,23 @@
 import json
 
-from lora import *
+from lora import NET_CONFIG
+from lora import GW_DUTY_CYCLE
+from lora import LORA_VERSION
+from lora import SUP_FREQUENCIES
+from lora import SPREADING_FACTORS
+from lora import CODING_RATES
+from lora import BANDS
+from lora import MAX_POWER
+from lora import LoRa
+from lora import MessageType
 
 
 class AccessPoint:
     def __init__(self, id):
         self.id = id
         self.net_config = NET_CONFIG
+        self.duty_cycle_refresh = LoRa.get_current_time()
+        self.duty_cycle = GW_DUTY_CYCLE
 
     def generate_setr(self):
         message = {}
@@ -35,7 +46,7 @@ class AccessPoint:
 
     def process_seta(self, message):
         print("Processing SETA message...")
-        body = message['message_body']
+        # body = message['message_body']
 
     def process_reply(self, reply):
         if reply is not None:
@@ -51,3 +62,17 @@ class AccessPoint:
                 print("Could not deserialize JSON object")
         else:
             print("No reply")
+
+    def set_remaining_duty_cycle(self, time):
+        print("Access point duty cycle is {0} ms".format(self.duty_cycle))
+
+        if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):
+            print('Duty cycle refresh for access point {0}'.format(self.id))
+            self.duty_cycle = GW_DUTY_CYCLE
+            return 0
+
+        if self.duty_cycle - time > 0:
+            self.duty_cycle -= time
+            return 0
+        else:
+            return 1

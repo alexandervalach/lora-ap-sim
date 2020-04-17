@@ -4,7 +4,8 @@ from datetime import datetime
 
 from enum import Enum
 
-DUTY_CYCLE = 36000
+DUTY_CYCLE = 3600
+GW_DUTY_CYCLE = 36000
 BATTERY_FULL = 100
 MIN_HEART_RATE = 50
 MAX_HEART_RATE = 150
@@ -59,7 +60,7 @@ class LoRa:
         :param bw: bandwidth in Hz
         :param cr: coding rate
         :param percentage: duty cycle percentage
-        :return: 
+        :return:
         """""
         cr = LoRa.get_coding_rate_value(cr)
         time_per_symbol = pow(2, sf) / (bw / 1000)

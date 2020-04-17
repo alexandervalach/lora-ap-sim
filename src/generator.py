@@ -8,7 +8,7 @@ dev_ids = []
 file_path = "data/group1.txt"
 
 
-def generate_nodes(number_of_nodes=1000, dev_id_length=4):
+def generate_nodes(number_of_nodes=500, dev_id_length=4):
     for x in range(number_of_nodes):
         dev_ids.append(''.join(random.choices(string.ascii_letters + string.digits, k=dev_id_length)))
 

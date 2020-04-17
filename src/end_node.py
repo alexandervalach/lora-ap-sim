@@ -1,6 +1,19 @@
 import json
+import random
 
-from lora import *
+from lora import LORA_VERSION
+from lora import GW_DUTY_CYCLE
+from lora import BATTERY_FULL
+from lora import DUTY_CYCLE
+from lora import CHANNELS
+from lora import NET_CONFIG
+from lora import LoRa
+from lora import PRE_SHARED_KEY
+from lora import REG_FREQUENCIES
+from lora import MIN_HEART_RATE
+from lora import MAX_HEART_RATE
+from lora import MessageType
+from lora import Acknowledgement
 
 
 class EndNode:
@@ -40,7 +53,7 @@ class EndNode:
 
         # Check if there is remaining duty cycle, additionally perform refresh
         self.set_remaining_duty_cycle(time)
-        print(self.duty_cycle)
+        # print(self.duty_cycle)
         if self.duty_cycle == 0:
             return None
 
@@ -100,15 +113,17 @@ class EndNode:
                 message_name = message['message_name']
 
                 if message_name == 'REGA':
-                    self.process_rega(message)
+                    return self.process_rega(message)
                 elif message_name == 'TXL':
-                    self.process_txl(message)
+                    return self.process_txl(message)
                 else:
                     print("Unknown message type")
         except ValueError:
             print("Could not deserialize JSON object")
         except TypeError:
             print("TypeError")
+        finally:
+            return
 
     def process_rega(self, message):
         print('Processing REGA message for node {0}...'.format(self.dev_id))
@@ -116,8 +131,9 @@ class EndNode:
         dev_id = body['dev_id']
 
         if dev_id == self.dev_id:
-            if body['app_data']:
-                app_data = body['app_data']
+            # No support for app_data
+            # if body['app_data']:
+            # app_data = body['app_data']
 
             if body['net_data']:
                 net_data = body['net_data']
@@ -145,10 +161,12 @@ class EndNode:
 
                     if data['freqs']:
                         self.net_config[config_type]['freqs'] = data['freqs']
-                        print('FREQS set for node {1}'.format(data['freqs'], self.dev_id))
+                        print('FREQS {0} set for node {1}'.format(data['freqs'], self.dev_id))
         else:
             print("Different DEV_IDs:")
             print(dev_id, self.dev_id)
+
+        return body['time']
 
     def process_txl(self, message):
         print('Processing TXL message for node {0}...'.format(self.dev_id))
@@ -156,8 +174,9 @@ class EndNode:
         dev_id = body['dev_id']
 
         if dev_id == self.dev_id:
-            if body['app_data']:
-                app_data = body['app_data']
+            # NO support for downlink app_data
+            # if body['app_data']:
+            # app_data = body['app_data']
 
             if body['net_data']:
                 net_data = body['net_data']
@@ -175,6 +194,8 @@ class EndNode:
         else:
             print("Different DEV_IDs:")
             print(dev_id, self.dev_id)
+
+        return body['time']
 
     def set_remaining_duty_cycle(self, time):
         if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):

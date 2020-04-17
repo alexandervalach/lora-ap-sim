@@ -15,6 +15,7 @@ def main(argv):
     ap_id = ''
     register_nodes = False
     shuffle_nodes = False
+    duty_cycle_na = False
     node_file = "data/group1.txt"
 
     # Reading arguments from command line
@@ -72,8 +73,17 @@ def main(argv):
                 else:
                     print(str(regr_message, 'ascii'))
                     reply = conn.send_data(regr_message)
-                    node.process_reply(reply)
-                time.sleep(1)
+
+                    # Access point duty cycle refresh
+                    if duty_cycle_na != 1:
+                        airtime = node.process_reply(reply)
+                    else:
+                        airtime = 0
+
+                    if airtime is not None:
+                        duty_cycle_na = access_point.set_remaining_duty_cycle(airtime)
+
+                # time.sleep(1)
 
         while True:
             for node in nodes:
@@ -83,9 +93,18 @@ def main(argv):
                     print("WARNING: Message from node " + node.get_dev_id() + " could not be sent")
                 else:
                     print(str(rxl_message, 'ascii'))
-                    node.process_reply(conn.send_data(rxl_message))
+                    reply = conn.send_data(rxl_message)
 
-            time.sleep(1)
+                    # Access point duty cycle refresh
+                    if duty_cycle_na != 1:
+                        airtime = node.process_reply(reply)
+                    else:
+                        airtime = 0
+
+                    if airtime is not None:
+                        duty_cycle_na = access_point.set_remaining_duty_cycle(airtime)
+
+            # time.sleep(1)
 
 
 if __name__ == "__main__":

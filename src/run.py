@@ -8,10 +8,10 @@ import signal
 
 first_id = 111111
 last_id = 111121
-first_group = 1
-last_group = 9
+first_group = 10
+last_group = 19
 processes = []
-register = 0
+register = 1
 
 print("Loading APs configuration...")
 
@@ -21,12 +21,12 @@ def main(argv):
     for group in range(first_group, last_group):
         for ap_id in range(first_id, last_id):
             file = "data/group{0}.txt".format(group)
-            
+
             if register == 1:
                 command = "python main.py -i {0} -r -f {1} &".format(ap_id, file)
             else:
                 command = "python main.py -i {0} -s -f {1} &".format(ap_id, file)
-            
+
             command_list = command.split()
             processes.append(subprocess.Popen(command_list))
             time.sleep(1)
