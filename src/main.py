@@ -8,6 +8,7 @@ import random
 from access_point import AccessPoint
 from connection_controller import ConnectionController
 from end_node import EndNode
+from bandit_node import BanditNode
 from generator import load_nodes
 
 
@@ -15,12 +16,13 @@ def main(argv):
     ap_id = ''
     register_nodes = False
     shuffle_nodes = False
-    duty_cycle_na = False
+    duty_cycle_na = 0
     node_file = "data/group1.txt"
+    bandit_nodes = 0
 
     # Reading arguments from command line
     try:
-        opts, args = getopt.getopt(argv, "hi:rsf:a", ["id=", "file=", "help", "register", "shuffle"])
+        opts, args = getopt.getopt(argv, "hi:rsf:ab", ["id=", "file=", "help", "register", "shuffle", "bandit"])
     except getopt.GetoptError:
         print("main.py -i <access-point-id> [-r -s]")
         sys.exit(2)
@@ -41,6 +43,8 @@ def main(argv):
             shuffle_nodes = True
         elif opt in ("-f", "--file"):
             node_file = arg
+        elif opt in ("-b", "--bandit"):
+            bandit_nodes = 1
 
     # If there was an AP id defined
     if ap_id:
@@ -62,7 +66,10 @@ def main(argv):
         nodes = []
 
         for node_id in node_ids:
-            nodes.append(EndNode(node_id))
+            if bandit_nodes == 1:
+                nodes.append(BanditNode(node_id))
+            else:
+                nodes.append(EndNode(node_id))
 
         if register_nodes:
             for node in nodes:

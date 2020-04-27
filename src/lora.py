@@ -245,6 +245,44 @@ NET_CONFIG = {
     }
 }
 
+BANDIT_ARMS = [
+    { 'sf': 7, 'pw': 10, 'reward': 70 },
+    { 'sf': 7, 'pw': 11, 'reward': 70 },
+    { 'sf': 7, 'pw': 12, 'reward': 70 },
+    { 'sf': 7, 'pw': 13, 'reward': 70 },
+    { 'sf': 7, 'pw': 14, 'reward': 70 },
+    { 'sf': 7, 'pw': 15, 'reward': 70 },
+    { 'sf': 8, 'pw': 10, 'reward': 75 },
+    { 'sf': 8, 'pw': 11, 'reward': 75 },
+    { 'sf': 8, 'pw': 12, 'reward': 75 },
+    { 'sf': 8, 'pw': 13, 'reward': 75 },
+    { 'sf': 8, 'pw': 14, 'reward': 75 },
+    { 'sf': 8, 'pw': 15, 'reward': 75 },
+    { 'sf': 9, 'pw': 10, 'reward': 80 },
+    { 'sf': 9, 'pw': 11, 'reward': 80 },
+    { 'sf': 9, 'pw': 12, 'reward': 80 },
+    { 'sf': 9, 'pw': 13, 'reward': 80 },
+    { 'sf': 9, 'pw': 14, 'reward': 80 },
+    { 'sf': 10, 'pw': 10, 'reward': 85 },
+    { 'sf': 10, 'pw': 11, 'reward': 85 },
+    { 'sf': 10, 'pw': 12, 'reward': 85 },
+    { 'sf': 10, 'pw': 13, 'reward': 85 },
+    { 'sf': 10, 'pw': 14, 'reward': 85 },
+    { 'sf': 10, 'pw': 15, 'reward': 85 },
+    { 'sf': 11, 'pw': 10, 'reward': 90 },
+    { 'sf': 11, 'pw': 11, 'reward': 90 },
+    { 'sf': 11, 'pw': 12, 'reward': 90 },
+    { 'sf': 11, 'pw': 13, 'reward': 90 },
+    { 'sf': 11, 'pw': 14, 'reward': 90 },
+    { 'sf': 11, 'pw': 15, 'reward': 90 },
+    { 'sf': 12, 'pw': 10, 'reward': 95 },
+    { 'sf': 12, 'pw': 11, 'reward': 95 },
+    { 'sf': 12, 'pw': 12, 'reward': 95 },
+    { 'sf': 12, 'pw': 13, 'reward': 95 },
+    { 'sf': 12, 'pw': 14, 'reward': 95 },
+    { 'sf': 12, 'pw': 15, 'reward': 100 },
+]
+
 MAX_POWER = Power.PW14.value
 
 FREQUENCIES = [

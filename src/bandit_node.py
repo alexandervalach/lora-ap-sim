@@ -6,7 +6,7 @@ from lora import GW_DUTY_CYCLE
 from lora import BATTERY_FULL
 from lora import DUTY_CYCLE
 from lora import CHANNELS
-from lora import NET_CONFIG
+from lora import BANDIT_ARMS
 from lora import LoRa
 from lora import PRE_SHARED_KEY
 from lora import REG_FREQUENCIES
@@ -14,19 +14,20 @@ from lora import MIN_HEART_RATE
 from lora import MAX_HEART_RATE
 from lora import MessageType
 from lora import Acknowledgement
+from thompson_sampling import ThompsonSampling
 
 
-class EndNode:
+class BanditNode:
     def __init__(self, dev_id, seq=1):
         self.dev_id = dev_id
         self.seq = seq
         self.battery_level = BATTERY_FULL
         self.duty_cycle = DUTY_CYCLE
         self.is_mobile = False
-        self.net_config = NET_CONFIG
         self.duty_cycle_refresh = LoRa.get_current_time()
         self.pre_shared_key = PRE_SHARED_KEY
         self.freq = REG_FREQUENCIES[0]
+        self.bandit_arms = ThompsonSampling(BANDIT_ARMS)
 
     def get_dev_id(self):
         return self.dev_id
@@ -43,11 +44,13 @@ class EndNode:
 
         app_data = LoRa.get_data(heart_rate, self.battery_level)
 
-        sf = self.net_config[config_type]['sf']
-        band = self.net_config[config_type]['band']
-        cr = self.net_config[config_type]['cr']
-        power = self.net_config[config_type]['power']
-        freq = self.net_config[config_type]['freqs'][0]
+        arm = self.bandit_arms.choose_arm()
+
+        sf = arm['sf']
+        power = arm['power']
+        band = Bandwidth.BW125.value
+        cr = CodingRates.CR45.value
+        freq = Frequencies.F8661.value
 
         time = LoRa.calculate_time_on_air(len(app_data), sf, band, cr, 1)
 
@@ -145,23 +148,23 @@ class EndNode:
                     print('Network Data Type: {0}'.format(data['type']))
 
                     if data['sf']:
-                        self.net_config[config_type]['sf'] = data['sf']
+                        self.net_data[config_type]['sf'] = data['sf']
                         print('SF set to {0} for node {1}'.format(data['sf'], self.dev_id))
 
                     if data['power']:
-                        self.net_config[config_type]['power'] = data['power']
+                        self.net_data[config_type]['power'] = data['power']
                         print('PWR set to {0} for node {1}'.format(data['power'], self.dev_id))
 
                     if data['cr']:
-                        self.net_config[config_type]['cr'] = data['cr']
+                        self.net_data[config_type]['cr'] = data['cr']
                         print('CR set to {0} for node {1}'.format(data['cr'], self.dev_id))
 
                     if data['band']:
-                        self.net_config[config_type]['band'] = data['band']
+                        self.net_data[config_type]['band'] = data['band']
                         print('BW set to {0} for node {1}'.format(data['band'], self.dev_id))
 
                     if data['freqs']:
-                        self.net_config[config_type]['freqs'] = data['freqs']
+                        self.net_data[config_type]['freqs'] = data['freqs']
                         print('FREQS {0} set for node {1}'.format(data['freqs'], self.dev_id))
         else:
             print("Different DEV_IDs:")
@@ -186,11 +189,11 @@ class EndNode:
                     config_type = data['type'].lower()
 
                     if data['sf']:
-                        self.net_config[config_type]['sf'] = data['sf']
+                        self.net_data[config_type]['sf'] = data['sf']
                         print('SF updated to {0} for node {1}'.format(data['sf'], self.dev_id))
 
                     if data['power']:
-                        self.net_config[config_type]['power'] = data['power']
+                        self.net_data[config_type]['power'] = data['power']
                         print('PWR updated to {0} for node {1}'.format(data['power'], self.dev_id))
         else:
             print("Different DEV_IDs:")

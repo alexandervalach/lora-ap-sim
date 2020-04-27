@@ -6,12 +6,12 @@ import subprocess
 import os
 import signal
 
-first_id = 111111
-last_id = 111121
+first_id = 111110
+last_id = 111120
 first_group = 10
-last_group = 19
+last_group = 16
 processes = []
-register = 1
+register = 0
 
 print("Loading APs configuration...")
 
