@@ -68,15 +68,14 @@ class AccessPoint:
             print("No reply")
 
     def set_remaining_duty_cycle(self, time):
-        print("Access point duty cycle is {0} ms".format(self.duty_cycle))
-
+        print("Access point duty cycle is {0} ms. Next refresh {1}".format(self.duty_cycle, self.duty_cycle_refresh))
         if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):
             print('Duty cycle refresh for access point {0}'.format(self.hw_id))
             self.duty_cycle = GW_DUTY_CYCLE
-            return 0
 
         if self.duty_cycle - time > 0:
             self.duty_cycle -= time
             return 0
-        else:
-            return 1
+
+        self.duty_cycle_na = 1
+        return self.duty_cycle_na
