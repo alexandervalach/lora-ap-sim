@@ -1,25 +1,27 @@
 import socket
 import ssl
-import time
 
 
 class ConnectionController:
-    def __init__(self, host, port):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(10)
+    def __init__(self, s=None):
+        if s is None:
+            self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.s.settimeout(10)
+            # self.s.setblocking(False)
+        else:
+            self.s = s
 
-        self.conn = ssl.wrap_socket(s, ssl_version=ssl.PROTOCOL_TLSv1)
-        self.host = host
-        self.port = port
+        self.conn = ssl.wrap_socket(self.s, ssl_version=ssl.PROTOCOL_TLSv1)
 
-    def connect(self):
+    def connect(self, host, port):
         try:
-            self.conn.connect((self.host, self.port))
+            self.conn.connect((host, port))
         except Exception as e:
             print("An error occurred during a connection attempt")
             print(e)
-        # finally:
-        # self.conn.close()
+
+    def get_connection(self):
+        return self.conn
 
     def send_data(self, data):
         self.conn.sendall(data)
@@ -37,6 +39,7 @@ class ConnectionController:
             return None
 
     def close(self):
+        self.s.close()
         self.conn.close()
 
     def recv(self, buffer_size):

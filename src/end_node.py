@@ -1,11 +1,8 @@
 import json
 import random
 
-from lora import LORA_VERSION
-from lora import GW_DUTY_CYCLE
 from lora import BATTERY_FULL
 from lora import DUTY_CYCLE
-from lora import CHANNELS
 from lora import NET_CONFIG
 from lora import LoRa
 from lora import PRE_SHARED_KEY
@@ -16,8 +13,8 @@ from lora import MessageType
 from lora import Acknowledgement
 
 
-class EndNode:
-    def __init__(self, dev_id, seq=1):
+class EndNode():
+    def __init__(self, dev_id, conn, register_node=True, seq=1):
         self.dev_id = dev_id
         self.seq = seq
         self.battery_level = BATTERY_FULL
@@ -27,9 +24,29 @@ class EndNode:
         self.duty_cycle_refresh = LoRa.get_current_time()
         self.pre_shared_key = PRE_SHARED_KEY
         self.freq = REG_FREQUENCIES[0]
+        self.conn = conn
+        self.last_downlink_toa = 0
+
+        if register_node:
+            self.send_message('reg')
 
     def get_dev_id(self):
         return self.dev_id
+
+    def pop_last_downlink_toa(self):
+        toa = self.last_downlink_toa
+        self.last_downlink_toa = 0
+        return toa
+
+    def send_message(self, message_type='normal'):
+        message = self.generate_message(message_type)
+
+        if message is not None:
+            reply = self.conn.send_data(message)
+            if reply is not None:
+                self.last_downlink_toa = self.process_reply(reply)
+        else:
+            print("{0}: expired duty cycle".format(self.dev_id))
 
     def generate_message(self, config_type):
         message = {}
@@ -108,7 +125,7 @@ class EndNode:
     def process_reply(self, reply):
         try:
             if reply is not None:
-                # First { is doubled for unknown reason, remove it
+                # First '{' is doubled for unknown reason, let's remove it
                 reply = reply[1:]
                 message = json.loads(reply)
                 message_name = message['message_name']
@@ -119,12 +136,13 @@ class EndNode:
                     return self.process_txl(message)
                 else:
                     print("Unknown message type")
+                    return 0
         except ValueError:
             print("Could not deserialize JSON object")
+            return 0
         except TypeError:
             print("TypeError")
-        finally:
-            return
+            return 0
 
     def process_rega(self, message):
         print('Processing REGA message for node {0}...'.format(self.dev_id))
@@ -167,7 +185,10 @@ class EndNode:
             print("Different DEV_IDs:")
             print(dev_id, self.dev_id)
 
-        return body['time']
+        try:
+            return body['time']
+        except KeyError:
+            return 0
 
     def process_txl(self, message):
         print('Processing TXL message for node {0}...'.format(self.dev_id))
@@ -196,7 +217,10 @@ class EndNode:
             print("Different DEV_IDs:")
             print(dev_id, self.dev_id)
 
-        return body['time']
+        try:
+            return body['time']
+        except KeyError:
+            return 0
 
     def set_remaining_duty_cycle(self, time):
         if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):

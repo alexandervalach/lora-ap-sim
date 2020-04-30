@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 import getopt
+import socket
 import sys
-import time
 import random
 
 from access_point import AccessPoint
@@ -11,9 +11,12 @@ from end_node import EndNode
 from bandit_node import BanditNode
 from generator import load_nodes
 
+sock = None
+conn = None
+
 
 def main(argv):
-    ap_id = ''
+    ap_id = '111111'
     register_nodes = False
     shuffle_nodes = False
     duty_cycle_na = 0
@@ -47,75 +50,78 @@ def main(argv):
             bandit_nodes = 1
 
     # If there was an AP id defined
-    if ap_id:
-        access_point = AccessPoint(ap_id)
-        conn = ConnectionController('147.175.149.229', 25001)
-        conn.connect()
+    conn.connect('147.175.149.229', 25001)
+    access_point = AccessPoint(ap_id, conn)
+    access_point.send_setr()
 
-        setr_message = access_point.generate_setr()
+    node_ids = load_nodes(node_file)
 
-        if setr_message is not None:
-            print(str(setr_message, 'ascii'))
-            access_point.process_reply(conn.send_data(setr_message))
+    if shuffle_nodes:
+        random.shuffle(node_ids)
 
-        node_ids = load_nodes(node_file)
+    nodes = []
 
-        if shuffle_nodes:
-            random.shuffle(node_ids)
+    for node_id in node_ids:
+        if bandit_nodes == 1:
+            nodes.append(BanditNode(node_id))
+        else:
+            node = EndNode(node_id, conn)
 
-        nodes = []
-
-        for node_id in node_ids:
-            if bandit_nodes == 1:
-                nodes.append(BanditNode(node_id))
+            if duty_cycle_na != 1:
+                toa = node.pop_last_downlink_toa()
             else:
-                nodes.append(EndNode(node_id))
+                toa = 0
 
-        if register_nodes:
-            for node in nodes:
-                regr_message = node.generate_message('reg')
+            duty_cycle_na = access_point.set_remaining_duty_cycle(toa)
 
-                if regr_message is None:
-                    print("WARNING: Message from node " + node.get_dev_id() + " could not be sent")
+            nodes.append(node)
+
+    """
+    if register_nodes:
+        for node in nodes:
+            # Access point duty cycle refresh
+            if duty_cycle_na != 1:
+                airtime = node.process_reply(reply)
+            else:
+                airtime = 0
+
+            if airtime is not None:
+                duty_cycle_na = access_point.set_remaining_duty_cycle(airtime)
+
+        # time.sleep(1)
+    """
+
+    while True:
+        for node in nodes:
+            rxl_message = node.generate_message('normal')
+
+            if rxl_message is None:
+                print("WARNING: Message from node " + node.get_dev_id() + " could not be sent")
+            else:
+                print(str(rxl_message, 'ascii'))
+                reply = conn.send_data(rxl_message)
+
+                # Access point duty cycle refresh
+                if duty_cycle_na != 1:
+                    airtime = node.process_reply(reply)
                 else:
-                    print(str(regr_message, 'ascii'))
-                    reply = conn.send_data(regr_message)
+                    airtime = 0
 
-                    # Access point duty cycle refresh
-                    if duty_cycle_na != 1:
-                        airtime = node.process_reply(reply)
-                    else:
-                        airtime = 0
+                if airtime is not None:
+                    duty_cycle_na = access_point.set_remaining_duty_cycle(airtime)
 
-                    if airtime is not None:
-                        duty_cycle_na = access_point.set_remaining_duty_cycle(airtime)
-
-                # time.sleep(1)
-
-        while True:
-            for node in nodes:
-                rxl_message = node.generate_message('normal')
-
-                if rxl_message is None:
-                    print("WARNING: Message from node " + node.get_dev_id() + " could not be sent")
-                else:
-                    print(str(rxl_message, 'ascii'))
-                    reply = conn.send_data(rxl_message)
-
-                    # Access point duty cycle refresh
-                    if duty_cycle_na != 1:
-                        airtime = node.process_reply(reply)
-                    else:
-                        airtime = 0
-
-                    if airtime is not None:
-                        duty_cycle_na = access_point.set_remaining_duty_cycle(airtime)
-
-            # time.sleep(1)
+        # time.sleep(1)
 
 
 if __name__ == "__main__":
     try:
+        conn = ConnectionController()
         main(sys.argv[1:])
     except KeyboardInterrupt:
-        print("Python script finished!")
+        print("")
+
+        if conn is not None:
+            conn.close()
+            print("Connection closed")
+
+        print("Python script finished")

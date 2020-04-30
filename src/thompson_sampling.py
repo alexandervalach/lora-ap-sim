@@ -1,9 +1,9 @@
 import random
-import lora
+
 
 # Based on https://github.com/alison-carrera/mabalgs
 
-class ThompsomSampling:
+class ThompsonSampling:
     def __init__(self, arms):
         self.arms = arms
 
@@ -41,7 +41,7 @@ class ThompsomSampling:
         # ranked_arms = np.flip(np.argsort(theta_value), axis=0)
         # chosen_arm = ranked_arms[0]
         # self.n_impressions[chosen_arm] += 1
-        # return chosen_arm, ranked_arms
+        #  return chosen_arm, ranked_arms
 
     def update_reward(self, chosen_arm, reward):
         self.arms[chosen_arm]['reward'] += reward

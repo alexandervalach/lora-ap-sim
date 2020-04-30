@@ -204,6 +204,7 @@ class Power(Enum):
     def __int__(self):
         return int(self)
 
+    PW15 = 15
     PW14 = 14
     PW13 = 13
     PW12 = 12
@@ -233,15 +234,15 @@ NET_CONFIG = {
         'freqs': REG_FREQUENCIES,
         'band': Bandwidth.BW125.value,
         'cr': CodingRates.CR45.value,
-        'sf': SpreadingFactors.SF7.value,
-        'power': Power.PW14.value
+        'sf': SpreadingFactors.SF12.value,
+        'power': Power.PW15.value
     },
     'emer': {
         'freqs': EMER_FREQUENCIES,
         'band': Bandwidth.BW125.value,
         'cr': CodingRates.CR45.value,
-        'sf': SpreadingFactors.SF7.value,
-        'power': Power.PW14.value
+        'sf': SpreadingFactors.SF12.value,
+        'power': Power.PW15.value
     }
 }
 

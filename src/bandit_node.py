@@ -1,11 +1,8 @@
 import json
 import random
 
-from lora import LORA_VERSION
-from lora import GW_DUTY_CYCLE
 from lora import BATTERY_FULL
 from lora import DUTY_CYCLE
-from lora import CHANNELS
 from lora import BANDIT_ARMS
 from lora import LoRa
 from lora import PRE_SHARED_KEY

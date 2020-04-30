@@ -13,11 +13,12 @@ from lora import MessageType
 
 
 class AccessPoint:
-    def __init__(self, id):
-        self.id = id
+    def __init__(self, hw_id, conn):
+        self.hw_id = hw_id
         self.net_config = NET_CONFIG
         self.duty_cycle_refresh = LoRa.get_current_time()
         self.duty_cycle = GW_DUTY_CYCLE
+        self.conn = conn
 
     def generate_setr(self):
         message = {}
@@ -25,7 +26,7 @@ class AccessPoint:
         lora_stand = {}
 
         message['message_name'] = MessageType.SETR.value
-        message_body['id'] = self.id
+        message_body['id'] = self.hw_id
         message_body['ver'] = LORA_VERSION
         message_body['m_chan'] = True
         message_body['channels'] = 8
@@ -44,9 +45,10 @@ class AccessPoint:
         json_message = json.dumps(message, separators=(',', ':'), sort_keys=True)
         return json_message.encode('ascii')
 
-    def process_seta(self, message):
-        print("Processing SETA message...")
-        # body = message['message_body']
+    def send_setr(self):
+        setr_message = self.generate_setr()
+        reply = self.conn.send_data(setr_message)
+        self.process_reply(reply)
 
     def process_reply(self, reply):
         if reply is not None:
@@ -55,7 +57,8 @@ class AccessPoint:
                 message_name = message['message_name']
 
                 if message_name == 'SETA':
-                    self.process_seta(message)
+                    print("Received SETA message")
+                    # self.process_seta(message)
                 else:
                     print("Unknown message type")
             except ValueError:
@@ -67,7 +70,7 @@ class AccessPoint:
         print("Access point duty cycle is {0} ms".format(self.duty_cycle))
 
         if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):
-            print('Duty cycle refresh for access point {0}'.format(self.id))
+            print('Duty cycle refresh for access point {0}'.format(self.hw_id))
             self.duty_cycle = GW_DUTY_CYCLE
             return 0
 
