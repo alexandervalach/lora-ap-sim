@@ -30,17 +30,18 @@ class EndNode():
         self.active_time = 0
 
     def device_routine(self, normal_queue, emer_queue):
-        start_time = time.time()
         try:
             if self.register_node:
+                start_time = time.time()
                 message = self.generate_message('reg')
                 if message is not None:
                     print("{0}: Registration message scheduled".format(self.dev_id))
                     normal_queue.put(message)
-            self.active_time += time.time() - start_time
-            time.sleep(300)
+                self.active_time += (time.time() - start_time)
+                time.sleep(300)
 
             while True:
+                start_time = time.time()
                 message = self.generate_message('normal')
                 if message is not None:
                     message_dict = json.loads(message)
@@ -55,10 +56,7 @@ class EndNode():
                 self.active_time += time.time() - start_time
                 time.sleep(300)
         except KeyboardInterrupt:
-            self.active_time += time.time() - start_time
-            print("{0},shutdown,{1}: ".format(self.dev_id, round(self.active_time, 2)))
-        finally:
-            self.active_time += time.time() - start_time
+            print("{0},shutdown,{1}".format(self.dev_id, round(self.active_time * 475, 2)))
 
     def get_dev_id(self):
         return self.dev_id
@@ -148,6 +146,7 @@ class EndNode():
         :param message:
         :return:
         """
+        start_time = time.time()
         try:
             message_name = message['message_name']
 
@@ -164,6 +163,8 @@ class EndNode():
         except TypeError:
             print("TypeError")
             return 0
+        finally:
+            self.active_time += (time.time() - start_time)
 
     def process_rega(self, message):
         print('{0}: Received REGA message'.format(self.dev_id))
