@@ -4,7 +4,7 @@ from datetime import datetime
 
 from enum import Enum
 
-DUTY_CYCLE = 3600
+DUTY_CYCLE = 36000
 GW_DUTY_CYCLE = 36000
 BATTERY_FULL = 100
 MIN_HEART_RATE = 50

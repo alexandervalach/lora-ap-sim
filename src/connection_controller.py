@@ -7,7 +7,6 @@ class ConnectionController:
         if s is None:
             self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.s.settimeout(10)
-            # self.s.setblocking(False)
         else:
             self.s = s
 
@@ -29,8 +28,8 @@ class ConnectionController:
         try:
             reply = self.recv(1024)
             if reply is not None:
-                print("Reply:")
-                print(str(reply, 'ascii'))
+                # print("Reply:")
+                # print(str(reply, 'ascii'))
                 return reply
             else:
                 return None
@@ -43,7 +42,7 @@ class ConnectionController:
         self.conn.close()
 
     def recv(self, buffer_size):
-        print("Waiting for reply...")
+        # print("Waiting for reply...")
         try:
             text = bytes()
             chunk = bytes()

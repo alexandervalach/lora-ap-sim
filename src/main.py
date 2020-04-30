@@ -1,10 +1,12 @@
 #!/usr/bin/python
 
 import getopt
-import socket
 import sys
 import random
+import time
+import json
 
+from multiprocessing import Process, Queue
 from access_point import AccessPoint
 from connection_controller import ConnectionController
 from end_node import EndNode
@@ -15,12 +17,32 @@ sock = None
 conn = None
 
 
+def read_reply(queue, access_point, nodes):
+    message = queue.get(timeout=1)
+    reply = conn.send_data(message)
+
+    if reply is not None:
+        # First '{' is doubled for unknown reason, let's remove it
+        reply = reply[1:]
+        reply_dict = json.loads(reply)
+
+        dev_id = reply_dict['message_body']['dev_id']
+
+        if access_point.duty_cycle_na != 1:
+            toa = nodes[dev_id].process_reply(reply_dict)
+        else:
+            toa = 0
+
+        if toa is not None:
+            access_point.duty_cycle_na = access_point.set_remaining_duty_cycle(toa)
+
+
 def main(argv):
     ap_id = '111111'
     register_nodes = False
     shuffle_nodes = False
     duty_cycle_na = 0
-    node_file = "data/group1.txt"
+    node_file = "data/group10.txt"
     bandit_nodes = 0
 
     # Reading arguments from command line
@@ -55,43 +77,42 @@ def main(argv):
     access_point.send_setr()
 
     node_ids = load_nodes(node_file)
+    # node_ids = ['KmoT', 'meQy', 'meBh', 'cbun', 'ttYa']
 
     if shuffle_nodes:
         random.shuffle(node_ids)
 
-    nodes = []
+    nodes = {}
+    processes = {}
+
+    message_queue = Queue()
+    emergency_queue = Queue()
+    num_of_nodes = 0
 
     for node_id in node_ids:
         if bandit_nodes == 1:
-            nodes.append(BanditNode(node_id))
+            nodes[node_id] = BanditNode(node_id)
         else:
-            node = EndNode(node_id, conn)
+            node = EndNode(node_id)
+            process = Process(target=node.device_routine, args=(message_queue, emergency_queue,))
+            process.daemon = True
+            process.start()
+            processes[node_id] = process
+            nodes[node_id] = node
 
-            if duty_cycle_na != 1:
-                toa = node.pop_last_downlink_toa()
-            else:
-                toa = 0
-
-            duty_cycle_na = access_point.set_remaining_duty_cycle(toa)
-
-            nodes.append(node)
-
-    """
-    if register_nodes:
-        for node in nodes:
-            # Access point duty cycle refresh
-            if duty_cycle_na != 1:
-                airtime = node.process_reply(reply)
-            else:
-                airtime = 0
-
-            if airtime is not None:
-                duty_cycle_na = access_point.set_remaining_duty_cycle(airtime)
-
-        # time.sleep(1)
-    """
+        time.sleep(random.randrange(3))
+        num_of_nodes += 1
 
     while True:
+        while not message_queue.empty() or not emergency_queue.empty():
+            try:
+                while not emergency_queue.empty():
+                    read_reply(emergency_queue, access_point, nodes)
+
+                read_reply(message_queue, access_point, nodes)
+            except Exception as qe:
+                print(qe)
+        """
         for node in nodes:
             rxl_message = node.generate_message('normal')
 
@@ -109,7 +130,7 @@ def main(argv):
 
                 if airtime is not None:
                     duty_cycle_na = access_point.set_remaining_duty_cycle(airtime)
-
+        """
         # time.sleep(1)
 
 

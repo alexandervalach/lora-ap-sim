@@ -19,6 +19,7 @@ class AccessPoint:
         self.duty_cycle_refresh = LoRa.get_current_time()
         self.duty_cycle = GW_DUTY_CYCLE
         self.conn = conn
+        self.duty_cycle_na = 0
 
     def generate_setr(self):
         message = {}

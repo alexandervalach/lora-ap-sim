@@ -1,5 +1,6 @@
 import json
 import random
+import time
 
 from lora import BATTERY_FULL
 from lora import DUTY_CYCLE
@@ -14,7 +15,7 @@ from lora import Acknowledgement
 
 
 class EndNode():
-    def __init__(self, dev_id, conn, register_node=True, seq=1):
+    def __init__(self, dev_id, register_node=True, seq=1):
         self.dev_id = dev_id
         self.seq = seq
         self.battery_level = BATTERY_FULL
@@ -24,11 +25,40 @@ class EndNode():
         self.duty_cycle_refresh = LoRa.get_current_time()
         self.pre_shared_key = PRE_SHARED_KEY
         self.freq = REG_FREQUENCIES[0]
-        self.conn = conn
         self.last_downlink_toa = 0
+        self.register_node = register_node
+        self.active_time = 0
 
-        if register_node:
-            self.send_message('reg')
+    def device_routine(self, normal_queue, emer_queue):
+        start_time = time.time()
+        try:
+            if self.register_node:
+                message = self.generate_message('reg')
+                if message is not None:
+                    print("{0}: Registration message scheduled".format(self.dev_id))
+                    normal_queue.put(message)
+            self.active_time += time.time() - start_time
+            time.sleep(300)
+
+            while True:
+                message = self.generate_message('normal')
+                if message is not None:
+                    message_dict = json.loads(message)
+                    if message_dict['message_body']['type'] == 'emer':
+                        print("{0}: Emergency message scheduled".format(self.dev_id))
+                        emer_queue.put(message)
+                    else:
+                        print("{0}: Normal message scheduled".format(self.dev_id))
+                        normal_queue.put(message)
+                else:
+                    print("{0}: Message could not be sent due to low duty cycle".format(self.dev_id))
+                self.active_time += time.time() - start_time
+                time.sleep(300)
+        except KeyboardInterrupt:
+            self.active_time += time.time() - start_time
+            print("{0},shutdown,{1}: ".format(self.dev_id, round(self.active_time, 2)))
+        finally:
+            self.active_time += time.time() - start_time
 
     def get_dev_id(self):
         return self.dev_id
@@ -38,17 +68,7 @@ class EndNode():
         self.last_downlink_toa = 0
         return toa
 
-    def send_message(self, message_type='normal'):
-        message = self.generate_message(message_type)
-
-        if message is not None:
-            reply = self.conn.send_data(message)
-            if reply is not None:
-                self.last_downlink_toa = self.process_reply(reply)
-        else:
-            print("{0}: expired duty cycle".format(self.dev_id))
-
-    def generate_message(self, config_type):
+    def generate_message(self, config_type='normal'):
         message = {}
         message_body = {}
 
@@ -122,21 +142,22 @@ class EndNode():
         self.seq += 1
         return message
 
-    def process_reply(self, reply):
+    def process_reply(self, message):
+        """
+        Returns time on air of message
+        :param message:
+        :return:
+        """
         try:
-            if reply is not None:
-                # First '{' is doubled for unknown reason, let's remove it
-                reply = reply[1:]
-                message = json.loads(reply)
-                message_name = message['message_name']
+            message_name = message['message_name']
 
-                if message_name == 'REGA':
-                    return self.process_rega(message)
-                elif message_name == 'TXL':
-                    return self.process_txl(message)
-                else:
-                    print("Unknown message type")
-                    return 0
+            if message_name == 'REGA':
+                return self.process_rega(message)
+            elif message_name == 'TXL':
+                return self.process_txl(message)
+            else:
+                print("Unknown message type")
+                return 0
         except ValueError:
             print("Could not deserialize JSON object")
             return 0
@@ -145,7 +166,7 @@ class EndNode():
             return 0
 
     def process_rega(self, message):
-        print('Processing REGA message for node {0}...'.format(self.dev_id))
+        print('{0}: Received REGA message'.format(self.dev_id))
         body = message['message_body']
         dev_id = body['dev_id']
 
@@ -160,30 +181,27 @@ class EndNode():
                 for data in net_data:
                     config_type = data['type'].lower()
 
-                    print('Network Data Type: {0}'.format(data['type']))
+                    # print('Network Data Type: {0}'.format(data['type']))
 
                     if data['sf']:
                         self.net_config[config_type]['sf'] = data['sf']
-                        print('SF set to {0} for node {1}'.format(data['sf'], self.dev_id))
+                        # print('SF set to {0} for node {1}'.format(data['sf'], self.dev_id))
 
                     if data['power']:
                         self.net_config[config_type]['power'] = data['power']
-                        print('PWR set to {0} for node {1}'.format(data['power'], self.dev_id))
+                        # print('PWR set to {0} for node {1}'.format(data['power'], self.dev_id))
 
                     if data['cr']:
                         self.net_config[config_type]['cr'] = data['cr']
-                        print('CR set to {0} for node {1}'.format(data['cr'], self.dev_id))
+                        # print('CR set to {0} for node {1}'.format(data['cr'], self.dev_id))
 
                     if data['band']:
                         self.net_config[config_type]['band'] = data['band']
-                        print('BW set to {0} for node {1}'.format(data['band'], self.dev_id))
+                        # print('BW set to {0} for node {1}'.format(data['band'], self.dev_id))
 
                     if data['freqs']:
                         self.net_config[config_type]['freqs'] = data['freqs']
-                        print('FREQS {0} set for node {1}'.format(data['freqs'], self.dev_id))
-        else:
-            print("Different DEV_IDs:")
-            print(dev_id, self.dev_id)
+                        #  print('FREQS {0} set for node {1}'.format(data['freqs'], self.dev_id))
 
         try:
             return body['time']
@@ -191,7 +209,7 @@ class EndNode():
             return 0
 
     def process_txl(self, message):
-        print('Processing TXL message for node {0}...'.format(self.dev_id))
+        print('{0}: Received TXL message'.format(self.dev_id))
         body = message['message_body']
         dev_id = body['dev_id']
 
@@ -208,14 +226,11 @@ class EndNode():
 
                     if data['sf']:
                         self.net_config[config_type]['sf'] = data['sf']
-                        print('SF updated to {0} for node {1}'.format(data['sf'], self.dev_id))
+                        print('{0}: SF updated to {1}'.format(self.dev_id, data['sf']))
 
                     if data['power']:
                         self.net_config[config_type]['power'] = data['power']
-                        print('PWR updated to {0} for node {1}'.format(data['power'], self.dev_id))
-        else:
-            print("Different DEV_IDs:")
-            print(dev_id, self.dev_id)
+                        print('{0}: PWR updated to {1}'.format(self.dev_id, data['power']))
 
         try:
             return body['time']
@@ -223,8 +238,9 @@ class EndNode():
             return 0
 
     def set_remaining_duty_cycle(self, time):
+        print('{0}: Remaining duty cycle is {1}'.format(self.dev_id, self.duty_cycle))
         if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):
-            print('Duty cycle refresh for node {0}'.format(self.dev_id))
+            print('{0}: Duty cycle refresh'.format(self.dev_id))
             self.duty_cycle = DUTY_CYCLE
 
         if self.duty_cycle - time > 0:
