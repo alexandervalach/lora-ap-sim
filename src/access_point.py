@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 
 from lora import NET_CONFIG
 from lora import GW_DUTY_CYCLE
@@ -16,7 +17,7 @@ class AccessPoint:
     def __init__(self, hw_id, conn):
         self.hw_id = hw_id
         self.net_config = NET_CONFIG
-        self.duty_cycle_refresh = LoRa.get_current_time()
+        self.duty_cycle_refresh = LoRa.get_future_time()
         self.duty_cycle = GW_DUTY_CYCLE
         self.conn = conn
         self.duty_cycle_na = 0
@@ -67,14 +68,17 @@ class AccessPoint:
         else:
             print("No reply")
 
-    def set_remaining_duty_cycle(self, time):
+    def set_remaining_duty_cycle(self, time_on_air):
         print("Access point duty cycle is {0} ms. Next refresh {1}".format(self.duty_cycle, self.duty_cycle_refresh))
-        if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):
-            print('Duty cycle refresh for access point {0}'.format(self.hw_id))
-            self.duty_cycle = GW_DUTY_CYCLE
 
-        if self.duty_cycle - time > 0:
-            self.duty_cycle -= time
+        if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):
+            self.duty_cycle = GW_DUTY_CYCLE
+            self.duty_cycle_na = 0
+            print('{0}: Duty cycle refreshed to {1}s'.format(self.hw_id, self.duty_cycle))
+            self.duty_cycle_refresh = LoRa.get_future_time()
+
+        if self.duty_cycle - time_on_air > 0:
+            self.duty_cycle -= time_on_air
             return 0
 
         self.duty_cycle_na = 1

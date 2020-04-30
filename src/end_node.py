@@ -14,7 +14,7 @@ from lora import MessageType
 from lora import Acknowledgement
 
 
-class EndNode():
+class EndNode:
     def __init__(self, dev_id, register_node=True, seq=1):
         self.dev_id = dev_id
         self.seq = seq
@@ -22,7 +22,8 @@ class EndNode():
         self.duty_cycle = DUTY_CYCLE
         self.is_mobile = False
         self.net_config = NET_CONFIG
-        self.duty_cycle_refresh = LoRa.get_current_time()
+        self.duty_cycle_refresh = LoRa.get_future_time()
+        self.duty_cycle_na = 0
         self.pre_shared_key = PRE_SHARED_KEY
         self.freq = REG_FREQUENCIES[0]
         self.last_downlink_toa = 0
@@ -73,7 +74,7 @@ class EndNode():
         heart_rate = random.randint(MIN_HEART_RATE, MAX_HEART_RATE)
 
         # If critical heart rate values are present change message type
-        if heart_rate < 60 or heart_rate > 145:
+        if heart_rate < 55 or heart_rate > 145:
             config_type = 'emer'
 
         app_data = LoRa.get_data(heart_rate, self.battery_level)
@@ -238,13 +239,19 @@ class EndNode():
         except KeyError:
             return 0
 
-    def set_remaining_duty_cycle(self, time):
-        print('{0}: Remaining duty cycle is {1}'.format(self.dev_id, self.duty_cycle))
+    def set_remaining_duty_cycle(self, time_on_air):
+        print('{0}: Remaining duty cycle is {1}.'.format(self.dev_id, self.duty_cycle))
+
         if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):
             print('{0}: Duty cycle refresh'.format(self.dev_id))
             self.duty_cycle = DUTY_CYCLE
+            self.duty_cycle_na = 0
+            self.duty_cycle_refresh = LoRa.get_future_time()
 
-        if self.duty_cycle - time > 0:
-            self.duty_cycle -= time
-        else:
-            self.seq += 1
+        if self.duty_cycle - time_on_air > 0:
+            self.duty_cycle -= time_on_air
+            return 0
+
+        self.duty_cycle_na = 1
+        self.seq += 1
+        return self.duty_cycle_na

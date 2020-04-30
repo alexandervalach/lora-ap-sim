@@ -6,7 +6,7 @@ class ConnectionController:
     def __init__(self, s=None):
         if s is None:
             self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.s.settimeout(10)
+            self.s.settimeout(5)
         else:
             self.s = s
 

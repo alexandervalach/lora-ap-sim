@@ -1,6 +1,6 @@
 import random
 import base64
-from datetime import datetime
+import datetime
 
 from enum import Enum
 
@@ -82,41 +82,24 @@ class LoRa:
         Returns current minutes and seconds within an hour
         :return:
         """
-        now = datetime.now().time()
-        return now.strftime("%M:%S")
+        return datetime.datetime.now().replace(microsecond=0)
 
     @staticmethod
-    def duty_cycle_difference(time1, time2):
+    def get_future_time():
         """
-        Calculates difference between two timestamps and returns value in minutes
-        :param time1:
-        :param time2:
+        Returns current minutes and seconds within an hour
         :return:
         """
-        fmt = '%M:%S'
-        time_stamp1 = datetime.strptime(time1, fmt)
-        time_stamp2 = datetime.strptime(time2, fmt)
-
-        if time_stamp1 > time_stamp2:
-            td = time_stamp1 - time_stamp2
-        else:
-            td = time_stamp2 - time_stamp1
-
-        return int(round(td.total_seconds() / 60))
+        return datetime.datetime.now().replace(microsecond=0) + datetime.timedelta(hours=1)
 
     @staticmethod
-    def should_refresh_duty_cycle(refresh_time):
+    def should_refresh_duty_cycle(next_refresh_time):
         """
         Returns whether a duty cycle should be refreshed
-        :param refresh_time:
+        :param next_refresh_time:
         :return:
         """
-        diff = LoRa.duty_cycle_difference(refresh_time, LoRa.get_current_time())
-        # print(diff)
-        if diff >= 59:
-            return True
-        else:
-            return False
+        return datetime.datetime.now().replace(microsecond=0) >= next_refresh_time
 
     @staticmethod
     def get_coding_rate_value(cr):
@@ -247,41 +230,41 @@ NET_CONFIG = {
 }
 
 BANDIT_ARMS = [
-    { 'sf': 7, 'pw': 10, 'reward': 70 },
-    { 'sf': 7, 'pw': 11, 'reward': 70 },
-    { 'sf': 7, 'pw': 12, 'reward': 70 },
-    { 'sf': 7, 'pw': 13, 'reward': 70 },
-    { 'sf': 7, 'pw': 14, 'reward': 70 },
-    { 'sf': 7, 'pw': 15, 'reward': 70 },
-    { 'sf': 8, 'pw': 10, 'reward': 75 },
-    { 'sf': 8, 'pw': 11, 'reward': 75 },
-    { 'sf': 8, 'pw': 12, 'reward': 75 },
-    { 'sf': 8, 'pw': 13, 'reward': 75 },
-    { 'sf': 8, 'pw': 14, 'reward': 75 },
-    { 'sf': 8, 'pw': 15, 'reward': 75 },
-    { 'sf': 9, 'pw': 10, 'reward': 80 },
-    { 'sf': 9, 'pw': 11, 'reward': 80 },
-    { 'sf': 9, 'pw': 12, 'reward': 80 },
-    { 'sf': 9, 'pw': 13, 'reward': 80 },
-    { 'sf': 9, 'pw': 14, 'reward': 80 },
-    { 'sf': 10, 'pw': 10, 'reward': 85 },
-    { 'sf': 10, 'pw': 11, 'reward': 85 },
-    { 'sf': 10, 'pw': 12, 'reward': 85 },
-    { 'sf': 10, 'pw': 13, 'reward': 85 },
-    { 'sf': 10, 'pw': 14, 'reward': 85 },
-    { 'sf': 10, 'pw': 15, 'reward': 85 },
-    { 'sf': 11, 'pw': 10, 'reward': 90 },
-    { 'sf': 11, 'pw': 11, 'reward': 90 },
-    { 'sf': 11, 'pw': 12, 'reward': 90 },
-    { 'sf': 11, 'pw': 13, 'reward': 90 },
-    { 'sf': 11, 'pw': 14, 'reward': 90 },
-    { 'sf': 11, 'pw': 15, 'reward': 90 },
-    { 'sf': 12, 'pw': 10, 'reward': 95 },
-    { 'sf': 12, 'pw': 11, 'reward': 95 },
-    { 'sf': 12, 'pw': 12, 'reward': 95 },
-    { 'sf': 12, 'pw': 13, 'reward': 95 },
-    { 'sf': 12, 'pw': 14, 'reward': 95 },
-    { 'sf': 12, 'pw': 15, 'reward': 100 },
+    {'sf': 7, 'pw': 10, 'reward': 70},
+    {'sf': 7, 'pw': 11, 'reward': 70},
+    {'sf': 7, 'pw': 12, 'reward': 70},
+    {'sf': 7, 'pw': 13, 'reward': 70},
+    {'sf': 7, 'pw': 14, 'reward': 70},
+    {'sf': 7, 'pw': 15, 'reward': 70},
+    {'sf': 8, 'pw': 10, 'reward': 75},
+    {'sf': 8, 'pw': 11, 'reward': 75},
+    {'sf': 8, 'pw': 12, 'reward': 75},
+    {'sf': 8, 'pw': 13, 'reward': 75},
+    {'sf': 8, 'pw': 14, 'reward': 75},
+    {'sf': 8, 'pw': 15, 'reward': 75},
+    {'sf': 9, 'pw': 10, 'reward': 80},
+    {'sf': 9, 'pw': 11, 'reward': 80},
+    {'sf': 9, 'pw': 12, 'reward': 80},
+    {'sf': 9, 'pw': 13, 'reward': 80},
+    {'sf': 9, 'pw': 14, 'reward': 80},
+    {'sf': 10, 'pw': 10, 'reward': 85},
+    {'sf': 10, 'pw': 11, 'reward': 85},
+    {'sf': 10, 'pw': 12, 'reward': 85},
+    {'sf': 10, 'pw': 13, 'reward': 85},
+    {'sf': 10, 'pw': 14, 'reward': 85},
+    {'sf': 10, 'pw': 15, 'reward': 85},
+    {'sf': 11, 'pw': 10, 'reward': 90},
+    {'sf': 11, 'pw': 11, 'reward': 90},
+    {'sf': 11, 'pw': 12, 'reward': 90},
+    {'sf': 11, 'pw': 13, 'reward': 90},
+    {'sf': 11, 'pw': 14, 'reward': 90},
+    {'sf': 11, 'pw': 15, 'reward': 90},
+    {'sf': 12, 'pw': 10, 'reward': 95},
+    {'sf': 12, 'pw': 11, 'reward': 95},
+    {'sf': 12, 'pw': 12, 'reward': 95},
+    {'sf': 12, 'pw': 13, 'reward': 95},
+    {'sf': 12, 'pw': 14, 'reward': 95},
+    {'sf': 12, 'pw': 15, 'reward': 100},
 ]
 
 MAX_POWER = Power.PW14.value

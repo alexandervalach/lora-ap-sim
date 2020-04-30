@@ -141,28 +141,8 @@ class BanditNode:
 
                 for data in net_data:
                     config_type = data['type'].lower()
+                    print(config_type)
 
-                    print('Network Data Type: {0}'.format(data['type']))
-
-                    if data['sf']:
-                        self.net_data[config_type]['sf'] = data['sf']
-                        print('SF set to {0} for node {1}'.format(data['sf'], self.dev_id))
-
-                    if data['power']:
-                        self.net_data[config_type]['power'] = data['power']
-                        print('PWR set to {0} for node {1}'.format(data['power'], self.dev_id))
-
-                    if data['cr']:
-                        self.net_data[config_type]['cr'] = data['cr']
-                        print('CR set to {0} for node {1}'.format(data['cr'], self.dev_id))
-
-                    if data['band']:
-                        self.net_data[config_type]['band'] = data['band']
-                        print('BW set to {0} for node {1}'.format(data['band'], self.dev_id))
-
-                    if data['freqs']:
-                        self.net_data[config_type]['freqs'] = data['freqs']
-                        print('FREQS {0} set for node {1}'.format(data['freqs'], self.dev_id))
         else:
             print("Different DEV_IDs:")
             print(dev_id, self.dev_id)

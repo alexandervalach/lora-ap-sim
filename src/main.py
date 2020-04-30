@@ -44,13 +44,14 @@ def main(argv):
     shuffle_nodes = False
     duty_cycle_na = 0
     node_file = "data/group10.txt"
-    bandit_nodes = 0
+    bandit_nodes = False
+    test_scenario = False
 
     # Reading arguments from command line
     try:
-        opts, args = getopt.getopt(argv, "hi:rsf:ab", ["id=", "file=", "help", "register", "shuffle", "bandit"])
+        opts, args = getopt.getopt(argv, "hi:rsf:abt", ["id=", "file=", "help", "register", "shuffle", "bandit", "test"])
     except getopt.GetoptError:
-        print("main.py -i <access-point-id> [-r -s]")
+        print("main.py -i <access-point-id> [-r -s -t]")
         sys.exit(2)
 
     for opt, arg in opts:
@@ -70,15 +71,19 @@ def main(argv):
         elif opt in ("-f", "--file"):
             node_file = arg
         elif opt in ("-b", "--bandit"):
-            bandit_nodes = 1
+            bandit_nodes = True
+        elif opt in ("-t", "--test"):
+            test_scenario = True
 
     # If there was an AP id defined
     conn.connect('147.175.149.229', 25001)
     access_point = AccessPoint(ap_id, conn)
     access_point.send_setr()
 
-    node_ids = load_nodes(node_file)
-    # node_ids = ['KmoT', 'meQy', 'meBh', 'cbun', 'ttYa']
+    if test_scenario:
+        node_ids = ['KmoT', 'meQy', 'meBh', 'cbun', 'ttYa']
+    else:
+        node_ids = load_nodes(node_file)
 
     if shuffle_nodes:
         random.shuffle(node_ids)
@@ -91,7 +96,7 @@ def main(argv):
     num_of_nodes = 0
 
     for node_id in node_ids:
-        if bandit_nodes == 1:
+        if bandit_nodes:
             nodes[node_id] = BanditNode(node_id)
         else:
             node = EndNode(node_id, register_nodes)
@@ -101,7 +106,8 @@ def main(argv):
             processes[node_id] = process
             nodes[node_id] = node
 
-        time.sleep(random.randrange(3))
+        if register_nodes:
+            time.sleep(random.randrange(3))
         num_of_nodes += 1
 
     while True:
@@ -113,6 +119,7 @@ def main(argv):
                 read_reply(message_queue, access_point, nodes)
             except Exception as qe:
                 print(qe)
+            time.sleep(1)
 
 
 if __name__ == "__main__":
