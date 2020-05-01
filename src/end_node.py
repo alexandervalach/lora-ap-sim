@@ -5,6 +5,7 @@ import time
 from lora import BATTERY_FULL
 from lora import DUTY_CYCLE
 from lora import NET_CONFIG
+from lora import PROC_COEFF
 from lora import LoRa
 from lora import PRE_SHARED_KEY
 from lora import REG_FREQUENCIES
@@ -29,8 +30,10 @@ class EndNode:
         self.last_downlink_toa = 0
         self.register_node = register_node
         self.active_time = 0
+        self.uptime = 0
 
     def device_routine(self, normal_queue, emer_queue):
+        self.uptime = time.time()
         try:
             if self.register_node:
                 start_time = time.time()
@@ -57,7 +60,8 @@ class EndNode:
                 self.active_time += time.time() - start_time
                 time.sleep(300)
         except KeyboardInterrupt:
-            print("{0},shutdown,{1}".format(self.dev_id, round(self.active_time * 475, 2)))
+            self.uptime = time.time() - self.uptime
+            print("{0},shutdown,{1},{2}".format(self.dev_id, round(self.active_time * PROC_COEFF, 2), round(self.uptime * PROC_COEFF, 2)))
 
     def get_dev_id(self):
         return self.dev_id
@@ -74,7 +78,7 @@ class EndNode:
         heart_rate = random.randint(MIN_HEART_RATE, MAX_HEART_RATE)
 
         # If critical heart rate values are present change message type
-        if heart_rate < 55 or heart_rate > 145:
+        if heart_rate < 60 or heart_rate > 145:
             config_type = 'emer'
 
         app_data = LoRa.get_data(heart_rate, self.battery_level)
