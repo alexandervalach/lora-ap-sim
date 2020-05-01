@@ -3,7 +3,6 @@
 import random
 import string
 
-
 dev_ids = []
 file_path = "data/group1.txt"
 

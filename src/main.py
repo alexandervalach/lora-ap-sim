@@ -95,21 +95,6 @@ def main(argv):
     emergency_queue = Queue()
     num_of_nodes = 0
 
-    for node_id in node_ids:
-        if bandit_nodes:
-            nodes[node_id] = BanditNode(node_id)
-        else:
-            node = EndNode(node_id, register_nodes)
-            process = Process(target=node.device_routine, args=(message_queue, emergency_queue,))
-            process.daemon = True
-            process.start()
-            processes[node_id] = process
-            nodes[node_id] = node
-
-        if register_nodes:
-            time.sleep(random.randrange(3))
-        num_of_nodes += 1
-
     while True:
         while not message_queue.empty() or not emergency_queue.empty():
             try:
@@ -119,7 +104,24 @@ def main(argv):
                 read_reply(message_queue, access_point, nodes)
             except Exception as qe:
                 print(qe)
-            time.sleep(1)
+
+        if num_of_nodes < len(node_ids):
+            node_id = node_ids[num_of_nodes]
+
+            if bandit_nodes:
+                nodes[node_id] = BanditNode(node_id)
+            else:
+                node = EndNode(node_id, register_nodes)
+                process = Process(target=node.device_routine, args=(message_queue, emergency_queue,))
+                process.daemon = True
+                process.start()
+                processes[node_id] = process
+                nodes[node_id] = node
+
+            num_of_nodes += 1
+            time.sleep(random.randrange(30))
+        else:
+            time.sleep(random.randrange(3))
 
 
 if __name__ == "__main__":
