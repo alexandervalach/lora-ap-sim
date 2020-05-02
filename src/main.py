@@ -63,6 +63,8 @@ def main(argv):
             print("-r, --register\t\t- Include end nodes registration process")
             print("-s, --shuffle\t\t- Shuffle list of end nodes")
             print("-f <file_path>, --file=<file_path>\t- Specify LoRa node id file")
+            print("-b, --bandit\t- Activating bandit nodes support")
+            print("-t, --test\t- Using test scenario for developing purposes")
             sys.exit(0)
         elif opt in ("-i", "--id"):
             ap_id = arg
