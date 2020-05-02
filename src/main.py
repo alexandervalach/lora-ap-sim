@@ -10,7 +10,7 @@ from multiprocessing import Process, Queue
 from access_point import AccessPoint
 from connection_controller import ConnectionController
 from end_node import EndNode
-from bandit_node import BanditNode
+# from bandit_node import BanditNode
 from generator import load_nodes
 
 sock = None
@@ -19,7 +19,7 @@ conn = None
 
 def read_reply(queue, access_point, nodes):
     message = queue.get(timeout=1)
-    reply = conn.send_data(message)
+    reply = conn.send_data(message.json_message)
 
     if reply is not None:
         # First '{' is doubled for unknown reason, let's remove it
@@ -107,16 +107,17 @@ def main(argv):
 
         if num_of_nodes < len(node_ids):
             node_id = node_ids[num_of_nodes]
-
+            """
             if bandit_nodes:
                 nodes[node_id] = BanditNode(node_id)
             else:
-                node = EndNode(node_id, register_nodes)
-                process = Process(target=node.device_routine, args=(message_queue, emergency_queue,))
-                process.daemon = True
-                process.start()
-                processes[node_id] = process
-                nodes[node_id] = node
+            """
+            node = EndNode(node_id, register_nodes)
+            process = Process(target=node.device_routine, args=(message_queue, emergency_queue,))
+            process.daemon = True
+            process.start()
+            processes[node_id] = process
+            nodes[node_id] = node
 
             num_of_nodes += 1
             time.sleep(random.randrange(30))

@@ -1,8 +1,10 @@
 import random
 import base64
-import datetime
+import json
 
 from enum import Enum
+from datetime import datetime
+from datetime import timedelta
 
 DUTY_CYCLE = 36000
 GW_DUTY_CYCLE = 36000
@@ -11,6 +13,7 @@ MIN_HEART_RATE = 50
 MAX_HEART_RATE = 150
 LORA_VERSION = "1.0"
 PROC_COEFF = 475
+SLEEP_TIME = 300
 CHANNELS = 8
 PRE_SHARED_KEY = '+/////v////7////+////wIAAAA='
 
@@ -83,7 +86,17 @@ class LoRa:
         Returns current minutes and seconds within an hour
         :return:
         """
-        return datetime.datetime.now().replace(microsecond=0)
+        return datetime.now().replace(microsecond=0)
+
+    @staticmethod
+    def get_frame_time(airtime):
+        """
+        Returns current minutes and seconds within an hour
+        :return:
+        """
+        send_time = datetime.now()
+        receive_time = send_time + timedelta(milliseconds=airtime)
+        return send_time, receive_time
 
     @staticmethod
     def get_future_time():
@@ -91,7 +104,7 @@ class LoRa:
         Returns current minutes and seconds within an hour
         :return:
         """
-        return datetime.datetime.now().replace(microsecond=0) + datetime.timedelta(hours=1)
+        return datetime.now().replace(microsecond=0) + timedelta(hours=1)
 
     @staticmethod
     def should_refresh_duty_cycle(next_refresh_time):
@@ -100,7 +113,7 @@ class LoRa:
         :param next_refresh_time:
         :return:
         """
-        return datetime.datetime.now().replace(microsecond=0) >= next_refresh_time
+        return datetime.now().replace(microsecond=0) >= next_refresh_time
 
     @staticmethod
     def get_coding_rate_value(cr):
@@ -113,6 +126,25 @@ class LoRa:
         elif cr == CodingRates.CR48.value:
             return 4.0
 
+    @staticmethod
+    def collision_check(f, s):
+        """
+        Checks if there is a collision between two frames
+        :param f: first frame to analyse
+        :param s: second frame to analyse
+        :return: 0 if there is a collision, otherwise 1
+        """
+        if (
+                (s.start <= f.start <= s.end <= f.end) or
+                (f.start <= s.start <= f.end <= s.end) or
+                (f.start == s.end and s.start == s.end)
+        ):
+            f_dict = json.loads(f.message)
+            s_dict = json.loads(s.message)
+            if f_dict['message_body']['sf'] == s_dict['message_body']['sf']:
+                return 0
+        return 1
+
 
 class Acknowledgement(Enum):
     def __str__(self):
@@ -121,7 +153,6 @@ class Acknowledgement(Enum):
     NO_ACK = "UNSUPPORTED"
     OPTIONAL = "VOLATILE"
     MANDATORY = "MANDATORY"
-
 
 class MessageType(Enum):
     def __str__(self):

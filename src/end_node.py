@@ -6,6 +6,7 @@ from lora import BATTERY_FULL
 from lora import DUTY_CYCLE
 from lora import NET_CONFIG
 from lora import PROC_COEFF
+from lora import SLEEP_TIME
 from lora import LoRa
 from lora import PRE_SHARED_KEY
 from lora import REG_FREQUENCIES
@@ -13,6 +14,8 @@ from lora import MIN_HEART_RATE
 from lora import MAX_HEART_RATE
 from lora import MessageType
 from lora import Acknowledgement
+from helper import Helper
+from queued_message import QueuedMessage
 
 
 class EndNode:
@@ -29,39 +32,38 @@ class EndNode:
         self.freq = REG_FREQUENCIES[0]
         self.last_downlink_toa = 0
         self.register_node = register_node
+        self.node_registered = not register_node
         self.active_time = 0
         self.uptime = 0
+        self.collision_counter = 0
 
     def device_routine(self, normal_queue, emer_queue):
         self.uptime = time.time()
+
         try:
             if self.register_node:
-                start_time = time.time()
-                message = self.generate_message('reg')
-                if message is not None:
-                    print("{0}: Registration message scheduled".format(self.dev_id))
-                    normal_queue.put(message)
-                self.active_time += (time.time() - start_time)
-                time.sleep(300)
+                while not self.node_registered:
+                    start_time = time.time()
+                    message = self.generate_message('reg')
+                    self.send_routine(message, normal_queue, is_register=True)
+                    self.active_time += (time.time() - start_time)
+                    time.sleep(SLEEP_TIME)
 
             while True:
                 start_time = time.time()
                 message = self.generate_message('normal')
-                if message is not None:
-                    message_dict = json.loads(message)
-                    if message_dict['message_body']['type'] == 'emer':
-                        print("{0}: Emergency message scheduled".format(self.dev_id))
-                        emer_queue.put(message)
-                    else:
-                        print("{0}: Normal message scheduled".format(self.dev_id))
-                        normal_queue.put(message)
+
+                if message['message_body']['type'] == 'emer':
+                    self.send_routine(message, emer_queue)
                 else:
-                    print("{0}: Message could not be sent due to low duty cycle".format(self.dev_id))
+                    self.send_routine(message, normal_queue)
+
                 self.active_time += time.time() - start_time
-                time.sleep(300)
+                time.sleep(SLEEP_TIME)
         except KeyboardInterrupt:
-            self.uptime = time.time() - self.uptime
-            print("{0},shutdown,{1},{2}".format(self.dev_id, round(self.active_time * PROC_COEFF, 2), round(self.uptime * PROC_COEFF, 2)))
+            self.uptime = (time.time() - self.uptime) / 1000
+            print("{0},{1},{2},{3}".format(self.dev_id, round(self.active_time * PROC_COEFF, 2),
+                                           round(self.uptime * PROC_COEFF, 2), self.collision_counter))
 
     def get_dev_id(self):
         return self.dev_id
@@ -89,12 +91,13 @@ class EndNode:
         power = self.net_config[config_type]['power']
         freq = self.net_config[config_type]['freqs'][0]
 
-        time = LoRa.calculate_time_on_air(len(app_data), sf, band, cr, 1)
+        time_on_air = LoRa.calculate_time_on_air(len(app_data), sf, band, cr, 1)
 
         # Check if there is remaining duty cycle, additionally perform refresh
-        self.set_remaining_duty_cycle(time)
+        self.set_remaining_duty_cycle(time_on_air)
         # print(self.duty_cycle)
         if self.duty_cycle == 0:
+            print("{0}: Could not send message due to low duty cycle".format(self.dev_id))
             return None
 
         message_body['freq'] = freq
@@ -106,20 +109,17 @@ class EndNode:
         message_body['rssi'] = LoRa.get_rssi()
         message_body['sf'] = sf
         message_body['snr'] = LoRa.get_snr()
-        message_body['time'] = time
+        message_body['time'] = time_on_air
         message_body['type'] = config_type
 
         message['message_body'] = message_body
 
         if config_type == 'normal':
-            message = self.generate_rxl(message, app_data)
+            return self.generate_rxl(message, app_data)
         elif config_type == 'emer':
-            message = self.generate_emer(message, app_data)
+            return self.generate_emer(message, app_data)
         elif config_type == 'reg':
-            message = self.generate_regr(message, app_data)
-
-        json_message = json.dumps(message, separators=(',', ':'), sort_keys=True)
-        return json_message.encode('ascii')
+            return self.generate_regr(message, app_data)
 
     def generate_regr(self, message, app_data):
         message['message_name'] = MessageType.REGR.value
@@ -259,3 +259,31 @@ class EndNode:
         self.duty_cycle_na = 1
         self.seq += 1
         return self.duty_cycle_na
+
+    def schedule_message(self, message, queue):
+        message_body = message['message_body']
+        send_time, receive_time = LoRa.get_frame_time(message_body['time'])
+        queued_message = QueuedMessage(Helper.to_json(message), send_time, receive_time)
+        queue.put(queued_message)
+        print("{0}: {1} message scheduled".format(self.dev_id, message_body['type']))
+        return True
+
+    def send_routine(self, message, queue, is_register=False):
+        if message is None:
+            print("{0}: Message could not be sent due to low duty cycle".format(self.dev_id))
+            return
+
+        retries = 0
+        message_scheduled = False
+
+        while not message_scheduled:
+            message_scheduled = self.schedule_message(message, queue)
+            if not message_scheduled:
+                retries += 1
+                self.collision_counter += 1
+                if retries >= 3:
+                    print("{0}: {1} unsuccessful attempts. Entering sleep mode".format(self.dev_id, retries))
+                    break
+
+            if is_register and message_scheduled:
+                self.node_registered = True
