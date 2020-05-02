@@ -1,7 +1,7 @@
-import json
 import random
 import time
 
+from multiprocessing import Queue
 from lora import BATTERY_FULL
 from lora import DUTY_CYCLE
 from lora import NET_CONFIG
@@ -16,7 +16,6 @@ from lora import MessageType
 from lora import Acknowledgement
 from helper import Helper
 from queued_message import QueuedMessage
-
 
 class EndNode:
     def __init__(self, dev_id, register_node=True, seq=1):
@@ -36,6 +35,7 @@ class EndNode:
         self.active_time = 0
         self.uptime = 0
         self.collision_counter = 0
+        self.awaiting_reply = Queue()
 
     def device_routine(self, normal_queue, emer_queue):
         self.uptime = time.time()
@@ -51,14 +51,29 @@ class EndNode:
 
             while True:
                 start_time = time.time()
-                message = self.generate_message('normal')
 
-                if message['message_body']['type'] == 'emer':
-                    self.send_routine(message, emer_queue)
+                # If there is a message waiting in queue, send it first
+                if not self.awaiting_reply.empty():
+                    queued_message = self.awaiting_reply.get(timeout=1)
+
+                    msg_dict = Helper.from_json(queued_message.json_message)
+
+                    if msg_dict['message_body']['type'] == 'emer':
+                        self.send_routine(msg_dict, emer_queue)
+                    else:
+                        self.send_routine(msg_dict, normal_queue)
+
+                    self.awaiting_reply.put(queued_message)
+                # Otherwise generate new message
                 else:
-                    self.send_routine(message, normal_queue)
+                    message = self.generate_message('normal')
 
-                self.active_time += time.time() - start_time
+                    if message['message_body']['type'] == 'emer':
+                        self.send_routine(message, emer_queue)
+                    else:
+                        self.send_routine(message, normal_queue)
+
+                    self.active_time += time.time() - start_time
                 time.sleep(SLEEP_TIME)
         except KeyboardInterrupt:
             self.uptime = (time.time() - self.uptime) / 1000
@@ -80,7 +95,7 @@ class EndNode:
         heart_rate = random.randint(MIN_HEART_RATE, MAX_HEART_RATE)
 
         # If critical heart rate values are present change message type
-        if heart_rate < 60 or heart_rate > 145:
+        if heart_rate < 56 or heart_rate > 145:
             config_type = 'emer'
 
         app_data = LoRa.get_data(heart_rate, self.battery_level)
@@ -145,20 +160,34 @@ class EndNode:
         self.seq += 1
         return message
 
-    def process_reply(self, message):
+    def process_reply(self, reply):
         """
         Returns time on air of message
-        :param message:
+        :param reply:
         :return:
         """
         start_time = time.time()
+
+        messages_awaiting_reply = []
+
+        while not self.awaiting_reply.empty():
+            msg = self.awaiting_reply.get(timeout=1)
+            messages_awaiting_reply.append(msg)
+            if msg.id == reply.id:
+                print("{0}: Message {1} acknowledged".format(self.dev_id, reply.id))
+                messages_awaiting_reply.remove(msg)
+                break
+
+        for item in messages_awaiting_reply:
+            self.awaiting_reply.put(item)
+
         try:
-            message_name = message['message_name']
+            message_name = reply.message['message_name']
 
             if message_name == 'REGA':
-                return self.process_rega(message)
+                return self.process_rega(reply.message)
             elif message_name == 'TXL':
-                return self.process_txl(message)
+                return self.process_txl(reply.message)
             else:
                 print("Unknown message type")
                 return 0
@@ -279,7 +308,13 @@ class EndNode:
 
         if not is_collision:
             queue.put(queued_message)
-            print("{0}: {1} message scheduled".format(self.dev_id, message_body['type']))
+
+            if message_body['type'] == 'emer' or message_body['type'] == 'reg':
+                self.awaiting_reply.put(queued_message)
+                print("{0}: {1} message scheduled. Awaiting reply for {2}.".format(
+                    self.dev_id, message_body['type'], queued_message.id))
+            else:
+                print("{0}: {1} message scheduled".format(self.dev_id, message_body['type']))
             return True
         print("{0}: A collision occurred on SF{1}".format(self.dev_id, message_body['sf']))
         return False
@@ -300,6 +335,7 @@ class EndNode:
                 if retries >= 3:
                     print("{0}: {1} unsuccessful attempts. Entering sleep mode".format(self.dev_id, retries))
                     break
+                time.sleep(random.randrange(1) + 1)
 
             if is_register and message_scheduled:
                 self.node_registered = True

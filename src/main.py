@@ -4,7 +4,6 @@ import getopt
 import sys
 import random
 import time
-import json
 
 from multiprocessing import Process, Queue
 from access_point import AccessPoint
@@ -12,6 +11,8 @@ from connection_controller import ConnectionController
 from end_node import EndNode
 # from bandit_node import BanditNode
 from generator import load_nodes
+from helper import Helper
+from queued_message import QueuedReply
 
 sock = None
 conn = None
@@ -22,14 +23,15 @@ def read_reply(queue, access_point, nodes):
     reply = conn.send_data(message.json_message)
 
     if reply is not None:
-        # First '{' is doubled for unknown reason, let's remove it
+        # First '{' is doubled for unknown reason, we remove it
         reply = reply[1:]
-        reply_dict = json.loads(reply)
+        reply_dict = Helper.from_json(reply)
+        queued_reply = QueuedReply(message.id, reply_dict)
 
         dev_id = reply_dict['message_body']['dev_id']
 
         if access_point.duty_cycle_na != 1:
-            toa = nodes[dev_id].process_reply(reply_dict)
+            toa = nodes[dev_id].process_reply(queued_reply)
         else:
             print("Could not send any downlink messages till next duty cycle refresh")
             toa = 0
@@ -95,23 +97,6 @@ def main(argv):
     emergency_queue = Queue()
     num_of_nodes = 0
 
-    # The first X nodes are powered on
-    while num_of_nodes < 25:
-        node_id = node_ids[num_of_nodes]
-        """
-        if bandit_nodes:
-            nodes[node_id] = BanditNode(node_id)
-        else:
-        """
-        node = EndNode(node_id, register_nodes)
-        process = Process(target=node.device_routine, args=(message_queue, emergency_queue,))
-        process.daemon = True
-        process.start()
-        processes[node_id] = process
-        nodes[node_id] = node
-        num_of_nodes += 1
-        time.sleep(random.randrange(3))
-
     while True:
         while not message_queue.empty() or not emergency_queue.empty():
             try:
@@ -122,7 +107,22 @@ def main(argv):
             except Exception as qe:
                 print(qe)
 
-        # Other nodes joins later
+            # Other nodes joins later
+            if num_of_nodes < len(node_ids):
+                node_id = node_ids[num_of_nodes]
+                """
+                if bandit_nodes:
+                    nodes[node_id] = BanditNode(node_id)
+                else:
+                """
+                node = EndNode(node_id, register_nodes)
+                process = Process(target=node.device_routine, args=(message_queue, emergency_queue,))
+                process.daemon = True
+                process.start()
+                processes[node_id] = process
+                nodes[node_id] = node
+                num_of_nodes += 1
+
         if num_of_nodes < len(node_ids):
             node_id = node_ids[num_of_nodes]
             """
@@ -137,7 +137,7 @@ def main(argv):
             processes[node_id] = process
             nodes[node_id] = node
             num_of_nodes += 1
-            time.sleep(random.randrange(3))
+            time.sleep(random.randrange(2))
 
 
 if __name__ == "__main__":
