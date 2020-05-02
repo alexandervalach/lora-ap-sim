@@ -95,6 +95,23 @@ def main(argv):
     emergency_queue = Queue()
     num_of_nodes = 0
 
+    # The first X nodes are powered on
+    while num_of_nodes < 25:
+        node_id = node_ids[num_of_nodes]
+        """
+        if bandit_nodes:
+            nodes[node_id] = BanditNode(node_id)
+        else:
+        """
+        node = EndNode(node_id, register_nodes)
+        process = Process(target=node.device_routine, args=(message_queue, emergency_queue,))
+        process.daemon = True
+        process.start()
+        processes[node_id] = process
+        nodes[node_id] = node
+        num_of_nodes += 1
+        time.sleep(random.randrange(3))
+
     while True:
         while not message_queue.empty() or not emergency_queue.empty():
             try:
@@ -105,6 +122,7 @@ def main(argv):
             except Exception as qe:
                 print(qe)
 
+        # Other nodes joins later
         if num_of_nodes < len(node_ids):
             node_id = node_ids[num_of_nodes]
             """
@@ -118,10 +136,7 @@ def main(argv):
             process.start()
             processes[node_id] = process
             nodes[node_id] = node
-
             num_of_nodes += 1
-            time.sleep(random.randrange(30))
-        else:
             time.sleep(random.randrange(3))
 
 

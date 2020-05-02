@@ -244,8 +244,6 @@ class EndNode:
             return 0
 
     def set_remaining_duty_cycle(self, time_on_air):
-        print('{0}: Remaining duty cycle is {1}.'.format(self.dev_id, self.duty_cycle))
-
         if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):
             print('{0}: Duty cycle refresh'.format(self.dev_id))
             self.duty_cycle = DUTY_CYCLE
@@ -254,6 +252,7 @@ class EndNode:
 
         if self.duty_cycle - time_on_air > 0:
             self.duty_cycle -= time_on_air
+            print('{0}: Remaining duty cycle is {1}.'.format(self.dev_id, self.duty_cycle))
             return 0
 
         self.duty_cycle_na = 1
@@ -264,9 +263,26 @@ class EndNode:
         message_body = message['message_body']
         send_time, receive_time = LoRa.get_frame_time(message_body['time'])
         queued_message = QueuedMessage(Helper.to_json(message), send_time, receive_time)
-        queue.put(queued_message)
-        print("{0}: {1} message scheduled".format(self.dev_id, message_body['type']))
-        return True
+        is_collision = False
+
+        queue_items = []
+
+        while not queue.empty():
+            msg = queue.get(timeout=1)
+            queue_items.append(msg)
+            is_collision = LoRa.is_collision(queued_message, msg)
+            if is_collision:
+                break
+
+        for item in queue_items:
+            queue.put(item)
+
+        if not is_collision:
+            queue.put(queued_message)
+            print("{0}: {1} message scheduled".format(self.dev_id, message_body['type']))
+            return True
+        print("{0}: A collision occurred on SF{1}".format(self.dev_id, message_body['sf']))
+        return False
 
     def send_routine(self, message, queue, is_register=False):
         if message is None:

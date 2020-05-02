@@ -127,7 +127,7 @@ class LoRa:
             return 4.0
 
     @staticmethod
-    def collision_check(f, s):
+    def is_collision(f, s):
         """
         Checks if there is a collision between two frames
         :param f: first frame to analyse
@@ -139,11 +139,11 @@ class LoRa:
                 (f.start <= s.start <= f.end <= s.end) or
                 (f.start == s.end and s.start == s.end)
         ):
-            f_dict = json.loads(f.message)
-            s_dict = json.loads(s.message)
+            f_dict = json.loads(f.json_message)
+            s_dict = json.loads(s.json_message)
             if f_dict['message_body']['sf'] == s_dict['message_body']['sf']:
-                return 0
-        return 1
+                return True
+        return False
 
 
 class Acknowledgement(Enum):
