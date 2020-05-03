@@ -1,24 +1,28 @@
 from multiprocessing import Queue
 from lora import BATTERY_FULL
 from lora import DUTY_CYCLE
-from lora import NET_CONFIG
+from lora import BANDIT_ARMS
 from lora import LoRa
 from lora import PRE_SHARED_KEY
-from lora import REG_FREQUENCIES
+from lora import Bandwidth
+from lora import CodingRates
+from lora import Frequencies
 from node import Node
+from upper_confidence_bound import UpperConfidenceBound
 
-class EndNode(Node):
-    def __init__(self, dev_id, register_node=True, seq=1):
+
+class BanditNode(Node):
+    def __init__(self, dev_id, algorithm, register_node=True, seq=1):
         self.dev_id = dev_id
         self.seq = seq
         self.battery_level = BATTERY_FULL
         self.duty_cycle = DUTY_CYCLE
         self.is_mobile = False
-        self.net_config = NET_CONFIG
+        self.net_config = BANDIT_ARMS
         self.duty_cycle_refresh = LoRa.get_future_time()
         self.duty_cycle_na = 0
         self.pre_shared_key = PRE_SHARED_KEY
-        self.freq = REG_FREQUENCIES[0]
+        self.freq = Frequencies.F8661
         self.last_downlink_toa = 0
         self.register_node = register_node
         self.node_registered = not register_node
@@ -27,12 +31,16 @@ class EndNode(Node):
         self.collision_counter = 0
         self.awaiting_reply = Queue()
 
-    def _select_net_data(self, config_type='normal'):
-        sf = self.net_config[config_type]['sf']
-        band = self.net_config[config_type]['band']
-        cr = self.net_config[config_type]['cr']
-        power = self.net_config[config_type]['power']
-        freq = self.net_config[config_type]['freqs'][0]
+        if algorithm == 'ucb':
+            self.algorithm = UpperConfidenceBound()
+
+    def _select_net_data(self):
+        net_data = self.algorithm.choose_arm()
+        sf = net_data['sf']
+        power = net_data['pw']
+        band = Bandwidth.BW125
+        cr = CodingRates.CR45
+        freq = self.freq
         return sf, band, cr, power, freq
 
     def _process_rega(self, message):
@@ -41,34 +49,10 @@ class EndNode(Node):
         dev_id = body['dev_id']
 
         if dev_id == self.dev_id:
+
             if body['net_data']:
                 net_data = body['net_data']
-
-                for data in net_data:
-                    config_type = data['type'].lower()
-
-                    # print('Network Data Type: {0}'.format(data['type']))
-
-                    if data['sf']:
-                        self.net_config[config_type]['sf'] = data['sf']
-                        # print('SF set to {0} for node {1}'.format(data['sf'], self.dev_id))
-
-                    if data['power']:
-                        self.net_config[config_type]['power'] = data['power']
-                        # print('PWR set to {0} for node {1}'.format(data['power'], self.dev_id))
-
-                    if data['cr']:
-                        self.net_config[config_type]['cr'] = data['cr']
-                        # print('CR set to {0} for node {1}'.format(data['cr'], self.dev_id))
-
-                    if data['band']:
-                        self.net_config[config_type]['band'] = data['band']
-                        # print('BW set to {0} for node {1}'.format(data['band'], self.dev_id))
-
-                    if data['freqs']:
-                        self.net_config[config_type]['freqs'] = data['freqs']
-                        #  print('FREQS {0} set for node {1}'.format(data['freqs'], self.dev_id))
-
+                self.net_config = net_data
         try:
             return body['time']
         except KeyError:
