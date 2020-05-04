@@ -1,5 +1,6 @@
 from multiprocessing import Queue
 from lora import BATTERY_FULL
+from lora import GW_DUTY_CYCLE
 from lora import DUTY_CYCLE
 from lora import BANDIT_ARMS
 from lora import LoRa
@@ -30,6 +31,7 @@ class BanditNode(Node):
         self.uptime = 0
         self.collision_counter = 0
         self.awaiting_reply = Queue()
+        self.ap_duty_cycle = GW_DUTY_CYCLE
 
         if algorithm == 'ucb':
             self.algorithm = UpperConfidenceBound()

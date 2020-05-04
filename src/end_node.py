@@ -5,6 +5,7 @@ from lora import NET_CONFIG
 from lora import LoRa
 from lora import PRE_SHARED_KEY
 from lora import REG_FREQUENCIES
+from lora import GW_DUTY_CYCLE
 from node import Node
 
 class EndNode(Node):
@@ -26,6 +27,7 @@ class EndNode(Node):
         self.uptime = 0
         self.collision_counter = 0
         self.awaiting_reply = Queue()
+        self.ap_duty_cycle = GW_DUTY_CYCLE
 
     def _select_net_data(self, config_type='normal'):
         sf = self.net_config[config_type]['sf']

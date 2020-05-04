@@ -31,7 +31,7 @@ def read_reply(queue, access_point, nodes):
         dev_id = reply_dict['message_body']['dev_id']
 
         if access_point.duty_cycle_na != 1:
-            toa = nodes[dev_id].process_reply(queued_reply)
+            toa = nodes[dev_id].process_reply(queued_reply, access_point.duty_cycle)
         else:
             print("Could not send any downlink messages till next duty cycle refresh")
             toa = 0

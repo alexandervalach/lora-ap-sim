@@ -4,6 +4,7 @@ import time
 from multiprocessing import Queue
 from lora import BATTERY_FULL
 from lora import DUTY_CYCLE
+from lora import GW_DUTY_CYCLE
 from lora import NET_CONFIG
 from lora import PROC_COEFF
 from lora import SLEEP_TIME
@@ -16,6 +17,7 @@ from lora import MessageType
 from lora import Acknowledgement
 from helper import Helper
 from queued_message import QueuedMessage
+
 
 class Node:
     def __init__(self, dev_id, register_node=True, seq=1):
@@ -36,6 +38,7 @@ class Node:
         self.uptime = 0
         self.collision_counter = 0
         self.awaiting_reply = Queue()
+        self.ap_duty_cycle = GW_DUTY_CYCLE
 
     def device_routine(self, normal_queue, emer_queue):
         self.uptime = time.time()
@@ -126,7 +129,7 @@ class Node:
         message_body['cr'] = cr
         message_body['dev_id'] = self.dev_id
         message_body['power'] = power
-        message_body['duty_c'] = self.duty_cycle
+        message_body['duty_c'] = self.ap_duty_cycle
         message_body['rssi'] = LoRa.get_rssi()
         message_body['sf'] = sf
         message_body['snr'] = LoRa.get_snr()
@@ -166,14 +169,16 @@ class Node:
         self.seq += 1
         return message
 
-    def process_reply(self, reply):
+    def process_reply(self, reply, ap_duty_cycle):
         """
         Returns time on air of message
+        :param ap_duty_cycle:
         :param reply:
         :return:
         """
         start_time = time.time()
         messages_awaiting_reply = []
+        self.update_ap_duty_cycle(ap_duty_cycle)
 
         while not self.awaiting_reply.empty():
             msg = self.awaiting_reply.get(timeout=1)
@@ -286,3 +291,6 @@ class Node:
 
             if is_register and message_scheduled:
                 self.node_registered = True
+
+    def update_ap_duty_cycle(self, duty_cycle):
+        self.ap_duty_cycle = duty_cycle
