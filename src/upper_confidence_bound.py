@@ -37,7 +37,7 @@ class UpperConfidenceBound:
         self.arms_selected.append(arm)
         self.num_of_selections[arm] += 1
         chosen_arm = self.net_data[arm]
-        reward = chosen_arm.rw
+        reward = chosen_arm['rw']
         self.sums_of_rewards[arm] += reward
         self.total_reward += reward
         return chosen_arm
@@ -59,5 +59,8 @@ class UpperConfidenceBound:
         i = 0
         for data in self.net_data:
             if data.sf == sf and data.pw == pw:
-                self.net_data[i].rw += rw
+                self.net_data[i]['rw'] += rw
             i += 1
+
+    def update_arms(self, net_data):
+        self.net_data = net_data

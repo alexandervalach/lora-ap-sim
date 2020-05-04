@@ -9,7 +9,7 @@ from multiprocessing import Process, Queue
 from access_point import AccessPoint
 from connection_controller import ConnectionController
 from end_node import EndNode
-# from bandit_node import BanditNode
+from bandit_node import BanditNode
 from generator import load_nodes
 from helper import Helper
 from queued_message import QueuedReply
@@ -112,12 +112,12 @@ def main(argv):
             # Other nodes joins later
             if num_of_nodes < len(node_ids):
                 node_id = node_ids[num_of_nodes]
-                """
+
                 if bandit_nodes:
-                    nodes[node_id] = BanditNode(node_id)
+                    node = BanditNode(node_id, "ucb", register_nodes)
                 else:
-                """
-                node = EndNode(node_id, register_nodes)
+                    node = EndNode(node_id, register_nodes)
+
                 process = Process(target=node.device_routine, args=(message_queue, emergency_queue,))
                 process.daemon = True
                 process.start()
@@ -127,12 +127,11 @@ def main(argv):
 
         if num_of_nodes < len(node_ids):
             node_id = node_ids[num_of_nodes]
-            """
             if bandit_nodes:
-                nodes[node_id] = BanditNode(node_id)
+                node = BanditNode(node_id, "ucb", register_nodes)
             else:
-            """
-            node = EndNode(node_id, register_nodes)
+                node = EndNode(node_id, register_nodes)
+
             process = Process(target=node.device_routine, args=(message_queue, emergency_queue,))
             process.daemon = True
             process.start()

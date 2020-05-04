@@ -1,7 +1,7 @@
 import random
 
-
 # Based on https://github.com/alison-carrera/mabalgs
+
 
 class ThompsonSampling:
     def __init__(self, arms):
@@ -26,7 +26,7 @@ class ThompsonSampling:
                     ad = i
 
             ads_selected.append(ad)
-            reward = dataset.values[n, ad]
+            reward = self.arms[ad]
 
             if reward == 1:
                 numbers_of_reward_1[ad] = numbers_of_reward_1[ad] + 1
@@ -44,4 +44,4 @@ class ThompsonSampling:
         #  return chosen_arm, ranked_arms
 
     def update_reward(self, chosen_arm, reward):
-        self.arms[chosen_arm]['reward'] += reward
+        self.arms[chosen_arm]['rw'] += reward

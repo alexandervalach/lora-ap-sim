@@ -10,10 +10,11 @@ from lora import CodingRates
 from lora import Frequencies
 from node import Node
 from upper_confidence_bound import UpperConfidenceBound
+from thompson_sampling import ThompsonSampling
 
 
 class BanditNode(Node):
-    def __init__(self, dev_id, algorithm, register_node=True, seq=1):
+    def __init__(self, dev_id, algorithm="ucb", register_node=True, seq=1):
         self.dev_id = dev_id
         self.seq = seq
         self.battery_level = BATTERY_FULL
@@ -23,7 +24,7 @@ class BanditNode(Node):
         self.duty_cycle_refresh = LoRa.get_future_time()
         self.duty_cycle_na = 0
         self.pre_shared_key = PRE_SHARED_KEY
-        self.freq = Frequencies.F8661
+        self.freq = Frequencies.F8661.value
         self.last_downlink_toa = 0
         self.register_node = register_node
         self.node_registered = not register_node
@@ -33,15 +34,17 @@ class BanditNode(Node):
         self.awaiting_reply = Queue()
         self.ap_duty_cycle = GW_DUTY_CYCLE
 
-        if algorithm == 'ucb':
-            self.algorithm = UpperConfidenceBound()
+        if algorithm == "ucb":
+            self.algorithm = UpperConfidenceBound(self.net_config)
+        elif algorithm == "ts":
+            self.algorithm = ThompsonSampling()
 
-    def _select_net_data(self):
+    def _select_net_data(self, config_type="normal"):
         net_data = self.algorithm.choose_arm()
         sf = net_data['sf']
         power = net_data['pw']
-        band = Bandwidth.BW125
-        cr = CodingRates.CR45
+        band = Bandwidth.BW125.value
+        cr = CodingRates.CR45.value
         freq = self.freq
         return sf, band, cr, power, freq
 
@@ -51,8 +54,8 @@ class BanditNode(Node):
         dev_id = body['dev_id']
 
         if dev_id == self.dev_id:
-
             if body['net_data']:
+                print(body['net_data'])
                 net_data = body['net_data']
                 self.net_config = net_data
         try:
@@ -72,18 +75,7 @@ class BanditNode(Node):
 
             if body['net_data']:
                 net_data = body['net_data']
-
-                for data in net_data:
-                    config_type = data['type'].lower()
-
-                    if data['sf']:
-                        self.net_config[config_type]['sf'] = data['sf']
-                        print('{0}: SF updated to {1}'.format(self.dev_id, data['sf']))
-
-                    if data['power']:
-                        self.net_config[config_type]['power'] = data['power']
-                        print('{0}: PWR updated to {1}'.format(self.dev_id, data['power']))
-
+                print(net_data)
         try:
             return body['time']
         except KeyError:
