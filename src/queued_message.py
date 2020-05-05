@@ -7,6 +7,7 @@ class QueuedMessage:
         self.id = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
         self.json_message = json_message
         self.start = start
+        self.retries = 0
         self.end = end
 
 

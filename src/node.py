@@ -58,6 +58,7 @@ class Node:
                 # If there is a message waiting in queue, send it first
                 if not self.awaiting_reply.empty():
                     queued_message = self.awaiting_reply.get(timeout=1)
+                    queued_message.retries += 1
 
                     msg_dict = Helper.from_json(queued_message.json_message)
 
@@ -66,7 +67,8 @@ class Node:
                     else:
                         self._send_routine(msg_dict, normal_queue)
 
-                    self.awaiting_reply.put(queued_message)
+                    if queued_message.retries < 3:
+                        self.awaiting_reply.put(queued_message)
                 # Otherwise generate new message
                 else:
                     message = self.generate_message('normal')
