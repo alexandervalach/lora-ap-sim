@@ -37,7 +37,7 @@ class BanditNode(Node):
         if algorithm == "ucb":
             self.algorithm = UpperConfidenceBound(self.net_config)
         elif algorithm == "ts":
-            self.algorithm = ThompsonSampling()
+            self.algorithm = ThompsonSampling(self.net_config)
 
     def _select_net_data(self, config_type="normal"):
         net_data = self.algorithm.choose_arm()
@@ -75,7 +75,7 @@ class BanditNode(Node):
 
             if body['net_data']:
                 net_data = body['net_data']
-                print(net_data)
+                self.net_config = net_data
         try:
             return body['time']
         except KeyError:

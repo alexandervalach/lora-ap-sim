@@ -25,7 +25,7 @@ class UpperConfidenceBound:
 
         for i in range(0, self.num_of_arms):
             if self.num_of_selections[i] > 0:
-                avg_reward = self.sums_of_rewards
+                avg_reward = self.sums_of_rewards[i] / self.num_of_selections[i]
                 upper_bound = self._factor_importance_each_arm(self.num_of_selections[i], avg_reward)
             else:
                 upper_bound = 1e400
@@ -50,6 +50,7 @@ class UpperConfidenceBound:
             :return: An array with the importance of all arms.
         """
         exploration_factor = math.sqrt(2 * math.log(self.num_tries + 1) / num_selections)
+        print("AVG_RW: {0} EXPL_FACTOR: {1}".format(avg_reward, exploration_factor))
         return avg_reward + exploration_factor
 
     def update_reward(self, sf, pw, rw):
