@@ -27,12 +27,20 @@ STIoT packet generator which simulates LoRa@FIIT wireless access point and LoRa@
 - [X] Processing network data from network server to adapt communication parameters
 - [X] Calculate time-on-air (TOA) for each message
 - [X] Data retransmission in case of collision
-- [ ] Support for MABP statistical model and channel selection
+- [X] Support for MABP statistical model and channel selection
+- [X] Support for Upper Confidence Bound parameter selection
+- [ ] Support for Thompson Sampling parameter selection
 
 ## Command line interface
 
 ### End nodes generation is required if data folder is empty
-You should run
+You are free to change these variables in generator.py:
+```
+file_path="data/group1.txt"
+num_of_nodes = 100
+```
+
+Then you should run
 ```
 generator.py
 ```
