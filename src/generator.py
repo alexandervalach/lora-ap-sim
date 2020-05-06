@@ -5,7 +5,7 @@ import string
 
 dev_ids = []
 file_path = "data/group1.txt"
-
+num_of_nodes = 500
 
 def generate_nodes(number_of_nodes=500, dev_id_length=4):
     for x in range(number_of_nodes):
@@ -26,3 +26,6 @@ def load_nodes(path=file_path):
         ids.append(line.strip())
     file.close()
     return ids
+
+generate_nodes(num_of_nodes, 4)
+save_nodes(file_path)
