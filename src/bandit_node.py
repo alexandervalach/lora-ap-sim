@@ -15,6 +15,13 @@ from thompson_sampling import ThompsonSampling
 
 class BanditNode(Node):
     def __init__(self, dev_id, algorithm="ucb", register_node=True, seq=1):
+        """
+
+        :param dev_id: string, end node id
+        :param algorithm: string, name of algorithm, ucb
+        :param register_node: boolean, set if node should itself register first
+        :param seq: int, default sequence number value
+        """
         self.dev_id = dev_id
         self.seq = seq
         self.battery_level = BATTERY_FULL
@@ -40,6 +47,11 @@ class BanditNode(Node):
             self.algorithm = ThompsonSampling(self.net_config)
 
     def _select_net_data(self, config_type="normal"):
+        """
+        Pull a bandit arm
+        :param config_type: deprecated
+        :return
+        """
         net_data = self.algorithm.choose_arm()
         sf = net_data['sf']
         power = net_data['pw']
@@ -49,6 +61,11 @@ class BanditNode(Node):
         return sf, band, cr, power, freq
 
     def _process_rega(self, message):
+        """
+        Processing REGA message
+        :param message: STIoT message ready for processing
+        :return time on air in miliseconds
+        """
         print('{0}: Received REGA message'.format(self.dev_id))
         body = message['message_body']
         dev_id = body['dev_id']
@@ -64,6 +81,11 @@ class BanditNode(Node):
             return 0
 
     def _process_txl(self, message):
+        """
+        Processes TXL message and updates net_config
+        :param message: TXL message
+        :return airtime of processed message
+        """
         print('{0}: Received TXL message'.format(self.dev_id))
         body = message['message_body']
         dev_id = body['dev_id']

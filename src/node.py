@@ -21,6 +21,12 @@ from queued_message import QueuedMessage
 
 class Node:
     def __init__(self, dev_id, register_node=True, seq=1):
+        """
+        Constructor
+        :param dev_id: string, end node id
+        :param register_node: boolean, set if node should itself register first
+        :param seq: int, default sequence number
+        """
         self.dev_id = dev_id
         self.seq = seq
         self.battery_level = BATTERY_FULL
@@ -41,6 +47,12 @@ class Node:
         self.ap_duty_cycle = GW_DUTY_CYCLE
 
     def device_routine(self, normal_queue, emer_queue):
+        """
+        Main end node process putting message to queue
+        :param normal_queue: Queue, queue for all messages
+        :param emer_queue: Queue, priority queue for emergency messages
+        :return
+        """
         self.uptime = time.time()
 
         try:
@@ -86,14 +98,27 @@ class Node:
                                            round(self.uptime * PROC_COEFF, 2), self.collision_counter))
 
     def get_dev_id(self):
+        """
+        Return a new dev_id
+        :return string
+        """
         return self.dev_id
 
     def pop_last_downlink_toa(self):
+        """
+        Pop last downlink airtime message
+        :return int, airtime
+        """
         toa = self.last_downlink_toa
         self.last_downlink_toa = 0
         return toa
 
     def calculate_heart_rate(self, config_type='normal'):
+        """
+        Heart rate calculation
+        :param config_type: string, config type
+        :return tuple, heart-rate value and new config type
+        """
         heart_rate = random.randint(MIN_HEART_RATE, MAX_HEART_RATE)
         # If critical heart rate values are present change message type
         if heart_rate < 56 or heart_rate > 145:
@@ -102,6 +127,11 @@ class Node:
         return heart_rate, config_type
 
     def _select_net_data(self, config_type='normal'):
+        """
+        Selects config parameters from net config
+        :param config_type: string
+        :return tuple, SF, BW, CR, PWR, FREQ
+        """
         sf = self.net_config[config_type]['sf']
         band = self.net_config[config_type]['band']
         cr = self.net_config[config_type]['cr']
@@ -110,6 +140,11 @@ class Node:
         return sf, band, cr, power, freq
 
     def generate_message(self, config_type='normal'):
+        """
+        Generate new message
+        :param config_type: string, normal, emer, reg
+        :return dict, STIoT message as a dictionary
+        """
         message = {}
         message_body = {}
 
@@ -148,12 +183,24 @@ class Node:
             return self._generate_regr(message, app_data)
 
     def _generate_regr(self, message, app_data):
+        """
+        Generate new regr message
+        :param message: dict, message
+        :param app_data: base64, base64 encoded application data
+        :return dict, STIoT message REGR
+        """
         message['message_name'] = MessageType.REGR.value
         message['message_body']['app_data'] = app_data
         message['message_body']['sh_key'] = self.pre_shared_key
         return message
 
     def _generate_rxl(self, message, data):
+        """
+        Generate new regr message
+        :param message: dict, message
+        :param app_data: base64, base64 encoded application data
+        :return dict, STIoT message RXL, type normal
+        """
         message['message_name'] = MessageType.RXL.value
         message['message_body']['ack'] = Acknowledgement.OPTIONAL.value
         message['message_body']['conf_need'] = False
@@ -163,6 +210,12 @@ class Node:
         return message
 
     def _generate_emer(self, message, data):
+        """
+        Generate new regr message
+        :param message: dict, message
+        :param app_data: base64, base64 encoded application data
+        :return dict, STIoT message RXL, type emer
+        """
         message['message_name'] = MessageType.RXL.value
         message['message_body']['ack'] = Acknowledgement.MANDATORY.value
         message['message_body']['conf_need'] = False
@@ -174,9 +227,9 @@ class Node:
     def process_reply(self, reply, ap_duty_cycle):
         """
         Returns time on air of message
-        :param ap_duty_cycle:
-        :param reply:
-        :return:
+        :param ap_duty_cycle: AP duty cycle
+        :param reply: dict, message reply
+        :return int or None, time on air of message
         """
         start_time = time.time()
         messages_awaiting_reply = []
@@ -213,6 +266,11 @@ class Node:
             self.active_time += (time.time() - start_time)
 
     def _process_rega(self, message):
+        """
+
+        :param message:
+        :return
+        """
         print('{0}: Received REGA message'.format(self.dev_id))
         try:
             return message['message_body']['time']
@@ -220,6 +278,11 @@ class Node:
             return 0
 
     def _process_txl(self, message):
+        """
+
+        :param message:
+        :return
+        """
         print('{0}: Received TXL message'.format(self.dev_id))
         try:
             return message['message_body']['time']
@@ -227,6 +290,12 @@ class Node:
             return 0
 
     def set_remaining_duty_cycle(self, time_on_air):
+        """
+        Checks AP duty cycle and refresh it if duty cycle refresh
+        Returns 0 if available and substracts duty cycle
+        :param time_on_air: int, time on air of message
+        :return int, 0 if available, 1 if not available
+        """
         if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):
             print('{0}: Duty cycle refresh'.format(self.dev_id))
             self.duty_cycle = DUTY_CYCLE
@@ -243,6 +312,12 @@ class Node:
         return self.duty_cycle_na
 
     def _schedule_message(self, message, queue):
+        """
+        Helper function to add a message to multiprocessor queue
+        :param message: dict, message to schedule
+        :param queue: Queue, normal queue
+        :return boolean, True if message scheduled, False if collision
+        """
         message_body = message['message_body']
         send_time, receive_time = LoRa.get_frame_time(message_body['time'])
         queued_message = QueuedMessage(Helper.to_json(message), send_time, receive_time)
@@ -274,6 +349,13 @@ class Node:
         return False
 
     def _send_routine(self, message, queue, is_register=False):
+        """
+        Try to send a message three times
+        :param message: dict, send message
+        :param queue: Queue, normal queue
+        :param is_register: boolean, check if registration
+        :return
+        """
         if message is None:
             print("{0}: Message could not be sent due to low duty cycle".format(self.dev_id))
             return
@@ -295,4 +377,9 @@ class Node:
                 self.node_registered = True
 
     def update_ap_duty_cycle(self, duty_cycle):
+        """
+        Updates AP duty cycle
+        :param duty_cycle: int, duty cycle values
+        :return void
+        """
         self.ap_duty_cycle = duty_cycle

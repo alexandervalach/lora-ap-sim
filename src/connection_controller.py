@@ -4,6 +4,10 @@ import ssl
 
 class ConnectionController:
     def __init__(self, s=None):
+        """
+        Constructor
+        :param s: ssl socket, instance of socket
+        """
         if s is None:
             self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.s.settimeout(5)
@@ -13,6 +17,12 @@ class ConnectionController:
         self.conn = ssl.wrap_socket(self.s, ssl_version=ssl.PROTOCOL_TLSv1)
 
     def connect(self, host, port):
+        """
+        Connect to a remote server
+        :param host: string ip address or domain name
+        :param port:
+        :return
+        """
         try:
             self.conn.connect((host, port))
         except Exception as e:
@@ -20,9 +30,18 @@ class ConnectionController:
             print(e)
 
     def get_connection(self):
+        """
+        Returns a connection
+        :return ssl socket wrapper
+        """
         return self.conn
 
     def send_data(self, data):
+        """
+        Send all buffered data using ssl socket
+        :param data: bytes, STIoT message in bytes
+        :return reply if received, otherwise None
+        """
         self.conn.sendall(data)
 
         try:
@@ -38,10 +57,19 @@ class ConnectionController:
             return None
 
     def close(self):
+        """
+        Properly close connection
+        :return
+        """
         self.s.close()
         self.conn.close()
 
-    def recv(self, buffer_size):
+    def recv(self, buffer_size=1024):
+        """
+        Custom socket receive method
+        :param buffer_size: int, default is 1024
+        :return received data
+        """
         # print("Waiting for reply...")
         try:
             text = bytes()

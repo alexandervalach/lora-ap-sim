@@ -8,11 +8,22 @@ file_path = "data/group1.txt"
 num_of_nodes = 500
 
 def generate_nodes(number_of_nodes=500, dev_id_length=4):
+    """
+    Generate nodes and save them to local array
+    :param number_of_nodes: int, default is 500
+    :param dev_id_length: int, default and recommended is 4
+    :return
+    """
     for x in range(number_of_nodes):
         dev_ids.append(''.join(random.choices(string.ascii_letters + string.digits, k=dev_id_length)))
 
 
 def save_nodes(path=file_path):
+    """
+    Save list of nodes in dev_id array to a file
+    :param path: string, relative or absolute path to new file, path must exists
+    :return
+    """
     file = open(path, "w")
     for dev_id in dev_ids:
         file.write(dev_id + "\n")
@@ -20,6 +31,11 @@ def save_nodes(path=file_path):
 
 
 def load_nodes(path=file_path):
+    """
+    Load list of nodes and returns it
+    :param path: path: string, relative or absolute path to new file, path must exists
+    :return list, list containing lot of ids
+    """
     ids = []
     file = open(path, "r")
     for line in file:

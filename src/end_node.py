@@ -10,6 +10,12 @@ from node import Node
 
 class EndNode(Node):
     def __init__(self, dev_id, register_node=True, seq=1):
+        """
+        Constructor
+        :param dev_id: string, end node id
+        :param register_node: boolean, set if node should itself register first
+        :param seq: int, default sequence number
+        """
         self.dev_id = dev_id
         self.seq = seq
         self.battery_level = BATTERY_FULL

@@ -24,7 +24,7 @@ class LoRa:
     def get_snr():
         """
         Randomly generated SNR values between 6.5 and 11.75
-        :return:
+        :return
         """
         return round(random.uniform(0, 1) * 5.25 + 6.5, 2)
 
@@ -32,7 +32,7 @@ class LoRa:
     def get_rssi():
         """
         Randomly generated RSSI values between -35 and -115
-        :return:
+        :return
         """
         return round(random.uniform(0, 1) * (-80) - 35, 1)
 
@@ -47,9 +47,9 @@ class LoRa:
     def get_data(heart_rate, battery_level):
         """
         Generate base64 string from input data
-        :param heart_rate:
-        :param battery_level:
-        :return:
+        :param heart_rate: float
+        :param battery_level: int
+        :return
         """
         message = str(heart_rate) + "," + str(battery_level)
         message_bytes = message.encode('ascii')
@@ -60,11 +60,11 @@ class LoRa:
         """
         Message time on air calculation based on LoRa@FIIT library
         :param data_len: data length in Bytes
-        :param sf: spreading factor
-        :param bw: bandwidth in Hz
-        :param cr: coding rate
+        :param sf: int, spreading factor
+        :param bw: int, bandwidth in Hz
+        :param cr: string, coding rate
         :param percentage: duty cycle percentage
-        :return:
+        :return
         """""
         cr = LoRa.get_coding_rate_value(cr)
         time_per_symbol = pow(2, sf) / (bw / 1000)
@@ -84,7 +84,7 @@ class LoRa:
     def get_current_time():
         """
         Returns current minutes and seconds within an hour
-        :return:
+        :return datetime
         """
         return datetime.now().replace(microsecond=0)
 
@@ -92,7 +92,7 @@ class LoRa:
     def get_frame_time(airtime):
         """
         Returns current minutes and seconds within an hour
-        :return:
+        :return tuple
         """
         send_time = datetime.now()
         receive_time = send_time + timedelta(milliseconds=airtime)
@@ -102,7 +102,7 @@ class LoRa:
     def get_future_time():
         """
         Returns current minutes and seconds within an hour
-        :return:
+        :return datetime
         """
         return datetime.now().replace(microsecond=0) + timedelta(hours=1)
 
@@ -111,12 +111,17 @@ class LoRa:
         """
         Returns whether a duty cycle should be refreshed
         :param next_refresh_time:
-        :return:
+        :return boolean
         """
         return datetime.now().replace(microsecond=0) >= next_refresh_time
 
     @staticmethod
     def get_coding_rate_value(cr):
+        """
+        Get coding rate as a numeric value
+        :param cr: string
+        :return float
+        """
         if cr == CodingRates.CR45.value:
             return 1.0
         elif cr == CodingRates.CR46.value:
@@ -132,7 +137,7 @@ class LoRa:
         Checks if there is a collision between two frames
         :param f: first frame to analyse
         :param s: second frame to analyse
-        :return: 0 if there is a collision, otherwise 1
+        :return boolean, True if there is a collision, otherwise False
         """
         if (
                 (s.start <= f.start <= s.end <= f.end) or

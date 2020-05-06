@@ -19,6 +19,13 @@ conn = None
 
 
 def read_reply(queue, access_point, nodes):
+    """
+    Read a reply received on main thread
+    :param queue: Queue
+    :param access_point: AccessPoint
+    :param nodes: dict, containing al nodes
+    :return void
+    """
     message = queue.get(timeout=1)
     reply = conn.send_data(message.json_message)
 
@@ -41,6 +48,11 @@ def read_reply(queue, access_point, nodes):
 
 
 def main(argv):
+    """
+    Main program method
+    :param argv: command line arguments
+    :return
+    """
     ap_id = '111111'
     register_nodes = False
     shuffle_nodes = False

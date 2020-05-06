@@ -23,6 +23,10 @@ class AccessPoint:
         self.duty_cycle_na = 0
 
     def generate_setr(self):
+        """
+        Generates SETR message as a python dictionary and returns json bytes
+        :return bytes
+        """
         message = {}
         message_body = {}
         lora_stand = {}
@@ -48,11 +52,20 @@ class AccessPoint:
         return json_message.encode('ascii')
 
     def send_setr(self):
+        """
+        Sends SETR message, receives reply adn passes to for processing
+        :return
+        """
         setr_message = self.generate_setr()
         reply = self.conn.send_data(setr_message)
         self.process_reply(reply)
 
     def process_reply(self, reply):
+        """
+        If there is a reply, process it
+        :param reply:
+        :return
+        """
         if reply is not None:
             try:
                 message = json.loads(str(reply, 'ascii'))
@@ -69,6 +82,12 @@ class AccessPoint:
             print("No reply")
 
     def set_remaining_duty_cycle(self, time_on_air):
+        """
+        Checks AP duty cycle and refresh it if duty cycle refresh
+        Returns 0 if available and substracts duty cycle
+        :param time_on_air: int, time on air of message
+        :return int, 0 if available, 1 if not available
+        """
         print("Access point duty cycle is {0} ms. Next refresh {1}".format(self.duty_cycle, self.duty_cycle_refresh))
 
         if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):

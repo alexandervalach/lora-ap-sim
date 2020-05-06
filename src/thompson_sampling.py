@@ -1,13 +1,18 @@
 import random
 
-# Based on https://github.com/alison-carrera/mabalgs
-
-
 class ThompsonSampling:
     def __init__(self, arms):
+        """
+        TS Constructor
+        :param arms: list, list of arms
+        """
         self.arms = arms
 
     def choose_arm(self):
+        """
+        Choose and arm base on alpha and bate values
+        :return dict, selected arm as a dictionary
+        """
         N = 10000
         d = 10
         ads_selected = []
@@ -44,4 +49,10 @@ class ThompsonSampling:
         #  return chosen_arm, ranked_arms
 
     def update_reward(self, chosen_arm, reward):
+        """
+        Update reward in arm
+        :param chosen_arm: int, index of arm
+        :param reward: int, reward increment or decrement
+        :return void
+        """
         self.arms[chosen_arm]['rw'] += reward

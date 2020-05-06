@@ -14,8 +14,12 @@ register = 1
 
 print("Loading APs configuration...")
 
-
 def main(argv):
+    """
+    Multi-AP processing
+    :param argv: command line arguments
+    :return
+    """
     # dirname = os.getcwd()
     group_id = first_group
     for ap_id in range(first_id, last_id):

@@ -4,8 +4,8 @@ import math
 class UpperConfidenceBound:
     def __init__(self, net_data):
         """
-            UCB constructor
-            :param net_data: list of all arms
+        UCB constructor
+        :param net_data: list, list of all arms
         """
         self.arms_selected = []
         self.net_data = net_data
@@ -17,8 +17,8 @@ class UpperConfidenceBound:
 
     def choose_arm(self):
         """
-            Selects the best arm from net_data.
-            :return: Returns selected arm
+        Selects the best arm from net_data.
+        :return dict, returns selected arm
         """
         arm = 0
         max_upper_bound = 0
@@ -44,10 +44,10 @@ class UpperConfidenceBound:
 
     def _factor_importance_each_arm(self, num_selections, avg_reward):
         """
-            This method represents the core of the UCB algorithm.
-            :param num_selections: number of selections for given arms
-            :param avg_reward: average reward calculated from all previous rewards
-            :return: An array with the importance of all arms.
+        This method represents the core of the UCB algorithm.
+        :param num_selections: int, number of selections for given arms
+        :param avg_reward: float, average reward calculated from all previous rewards
+        :return float, number of importance
         """
         exploration_factor = math.sqrt(2 * math.log(self.num_tries + 1) / num_selections)
         print("AVG_RW: {0} EXPL_FACTOR: {1}".format(avg_reward, exploration_factor))
@@ -55,7 +55,10 @@ class UpperConfidenceBound:
 
     def update_reward(self, sf, pw, rw):
         """
-            This method updates a reward for a given arm.
+        This method updates a reward for a given arm.
+        :param sf: int, spreading factor
+        :param pw: int, power
+        :param rw: int, reward
         """
         i = 0
         for data in self.net_data:
@@ -64,4 +67,9 @@ class UpperConfidenceBound:
             i += 1
 
     def update_arms(self, net_data):
+        """
+        Replace old model with new one
+        :param net_data: dict, arms as a dictionary
+        :return void
+        """
         self.net_data = net_data
