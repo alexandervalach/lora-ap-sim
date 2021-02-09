@@ -14,7 +14,7 @@ class ConnectionController:
         else:
             self.s = s
 
-        self.conn = ssl.wrap_socket(self.s, ssl_version=ssl.PROTOCOL_TLSv1)
+        self.conn = ssl.wrap_socket(self.s, ssl_version=ssl.PROTOCOL_TLSv1_2)
 
     def connect(self, host, port):
         """

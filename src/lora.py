@@ -144,8 +144,11 @@ class LoRa:
                 (f.start <= s.start <= f.end <= s.end) or
                 (f.start == s.end and s.start == s.end)
         ):
-            f_dict = json.loads(f.json_message)
-            s_dict = json.loads(s.json_message)
+            f_dict = json.loads(str(f.json_message, 'ascii'))
+            s_dict = json.loads(str(s.json_message, 'ascii'))
+            print(f.json_message)
+            print("-------------")
+            print(s.json_message)
             if f_dict['message_body']['sf'] == s_dict['message_body']['sf']:
                 return True
         return False

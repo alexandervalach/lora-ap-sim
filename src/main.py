@@ -30,8 +30,6 @@ def read_reply(queue, access_point, nodes):
     reply = conn.send_data(message.json_message)
 
     if reply is not None:
-        # First '{' is doubled for unknown reason, we remove it
-        reply = reply[1:]
         reply_dict = Helper.from_json(reply)
         queued_reply = QueuedReply(message.id, reply_dict)
 
@@ -92,7 +90,7 @@ def main(argv):
             test_scenario = True
 
     # If there was an AP id defined
-    conn.connect('147.175.149.229', 25001)
+    conn.connect('latedays.fiit.stuba.sk', 25001)
     access_point = AccessPoint(ap_id, conn)
     access_point.send_setr()
 
