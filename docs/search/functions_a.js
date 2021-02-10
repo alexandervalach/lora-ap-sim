@@ -1,0 +1,6 @@
+var searchData=
+[
+  ['update_5fap_5fduty_5fcycle_95',['update_ap_duty_cycle',['../classnode_1_1Node.html#a448b8d35f6ff23e9d147482f6ca67ac3',1,'node::Node']]],
+  ['update_5farms_96',['update_arms',['../classupper__confidence__bound_1_1UpperConfidenceBound.html#af2ec55051841f9cdf257ad751166db64',1,'upper_confidence_bound::UpperConfidenceBound']]],
+  ['update_5freward_97',['update_reward',['../classthompson__sampling_1_1ThompsonSampling.html#ae5c5f701656a2c8f975a80b497fbe666',1,'thompson_sampling.ThompsonSampling.update_reward()'],['../classupper__confidence__bound_1_1UpperConfidenceBound.html#a234291c21250667e076a0be754f040ca',1,'upper_confidence_bound.UpperConfidenceBound.update_reward()']]]
+];

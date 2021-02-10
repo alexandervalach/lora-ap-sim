@@ -2,6 +2,9 @@
 
 STIoT packet generator which simulates LoRa@FIIT wireless access point and LoRa@FIIT end nodes.
 
+## API Documentation
+API documentation generated with doxygen is available [online](https://alexandervalach.github.io/lora-ap-sim/docs/annotated.html).
+
 ## Supported features and TODO
 ### Access Points features
 
