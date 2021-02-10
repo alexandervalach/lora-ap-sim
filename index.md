@@ -1,37 +1,74 @@
-## Welcome to GitHub Pages
+## LoRa AP Simulator
 
-You can use the [editor on GitHub](https://github.com/alexandervalach/lora-ap-sim/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+STIoT packet generator which simulates LoRa@FIIT wireless access point and LoRa@FIIT end nodes.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## Supported features and TODO
+### Access Points features
 
-### Markdown
+#### LoRa Concentrator Features Support
+- [X] Pseudo-random RSSI, SNR generation
+- [X] Sending frequency data in STIoT messages
+- [X] Command line interface
+- [X] Duty cycle contraints and refresh
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+#### Thread-safe Features
+- [X] Non-blocking socket communication to improve scalability
+- [X] Thread-safe message queuing
 
-```markdown
-Syntax highlighted code block
+#### QoS Support
+- [X] Emergency message support
+- [X] Priority queue for emergency messages
 
-# Header 1
-## Header 2
-### Header 3
+#### Collisions
+- [X] Uplink collision simulation
+- [X] Downlink collision simulation
 
-- Bulleted
-- List
+### End Nodes Features
+- [X] End node duty cycle constraints and refresh
+- [X] Processing network data from network server to adapt communication parameters
+- [X] Calculate time-on-air (TOA) for each message
+- [X] Data retransmission in case of collision
+- [X] Support for MABP statistical model and channel selection
+- [X] Support for Upper Confidence Bound parameter selection
+- [ ] Support for Thompson Sampling parameter selection
 
-1. Numbered
-2. List
+## Command line interface
 
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+### End nodes generation is required if data folder is empty
+You are free to change these variables in generator.py:
+```
+file_path="data/group1.txt"
+num_of_nodes = 100
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+Then you should run
+```
+generator.py
+```
 
-### Jekyll Themes
+### Single access point usage
+Recommended approach.
+Could be displayed by running main.py -h or main.py --help commands
+```
+main.py -i <access-point-id>
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/alexandervalach/lora-ap-sim/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+-i <dev_id>, --id=<dev_id> - Specify LoRa AP hardware id
 
-### Support or Contact
+-r, --register - Include end nodes registration process
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+-s, --shuffle - Shuffle list of end nodes
+
+-f <file_path>, --file=<file_path> - Specify LoRa node id file
+
+-b, --bandit - Activating bandit nodes support
+
+-t, --test - Using test scenario for developing purposes
+```
+
+### Multi access point usage
+Just run the file. It generates 10x[number of files] new access points.
+This usage is buggy and can cause memmory leaks.
+Use at your own risk.
+```
+run.py
+```
