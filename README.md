@@ -2,12 +2,18 @@
 STIoT packet generator which simulates LoRa@FIIT wireless access point and LoRa@FIIT end nodes.
 
 ## Supported features and TODO
+
+### LoRa PHY Features
+- [ ] Generates a position of each node based on the distribution
+- [ ] Calculate a PATH LOSS depending on the variable distance from AP
+- [ ] Move the nodes using a normal speed of a human
+
 ### Access Points features
 
 #### LoRa Concentrator Features Support
 - [X] Pseudo-random RSSI, SNR generation
 - [X] Sending frequency data in STIoT messages
-- [X] Command line interface
+- [X] Support for Command Line Interface (CLI)
 - [X] Duty cycle contraints and refresh
 
 #### Thread-safe Features
@@ -27,9 +33,10 @@ STIoT packet generator which simulates LoRa@FIIT wireless access point and LoRa@
 - [X] Processing network data from network server to adapt communication parameters
 - [X] Calculate time-on-air (TOA) for each message
 - [X] Data retransmission in case of collision
-- [X] Support for MABP statistical model and channel selection
+- [X] Support for MABP reward model and channel selection
 - [X] Support for Upper Confidence Bound parameter selection
 - [ ] Support for Thompson Sampling parameter selection
+- [ ] Update parameters based on partial results from Network Server
 
 ## Command line interface
 
