@@ -21,6 +21,8 @@ class AccessPoint:
         self.duty_cycle = GW_DUTY_CYCLE
         self.conn = conn
         self.duty_cycle_na = 0
+        self.x = 0
+        self.y = 0
 
     def generate_setr(self):
         """
@@ -103,3 +105,13 @@ class AccessPoint:
 
         self.duty_cycle_na = 1
         return self.duty_cycle_na
+
+    def set_position(self, x, y):
+        """
+        Sets the position of an Access Point withing a specified area
+        :param x:
+        :param y:
+        :return:
+        """
+        self.x = x
+        self.y = y

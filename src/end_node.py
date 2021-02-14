@@ -6,26 +6,22 @@ from lora import LoRa
 from lora import PRE_SHARED_KEY
 from lora import REG_FREQUENCIES
 from lora import GW_DUTY_CYCLE
+from lora import SLEEP_TIME
 from node import Node
 
+
 class EndNode(Node):
-    def __init__(self, dev_id, register_node=True, seq=1):
+    def __init__(self, dev_id, register_node=True, seq=1, sleep_time=SLEEP_TIME):
         """
         Constructor
         :param dev_id: string, end node id
         :param register_node: boolean, set if node should itself register first
         :param seq: int, default sequence number
         """
-        self.dev_id = dev_id
-        self.seq = seq
-        self.battery_level = BATTERY_FULL
-        self.duty_cycle = DUTY_CYCLE
+        super().__init__(dev_id, register_node, seq, sleep_time)
         self.is_mobile = False
-        self.net_config = NET_CONFIG
         self.duty_cycle_refresh = LoRa.get_future_time()
         self.duty_cycle_na = 0
-        self.pre_shared_key = PRE_SHARED_KEY
-        self.freq = REG_FREQUENCIES[0]
         self.last_downlink_toa = 0
         self.register_node = register_node
         self.node_registered = not register_node

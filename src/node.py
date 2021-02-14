@@ -13,6 +13,8 @@ from lora import PRE_SHARED_KEY
 from lora import REG_FREQUENCIES
 from lora import MIN_HEART_RATE
 from lora import MAX_HEART_RATE
+from lora import MAX_X_POSITION
+from lora import MAX_Y_POSITION
 from lora import MessageType
 from lora import Acknowledgement
 from helper import Helper
@@ -20,7 +22,7 @@ from queued_message import QueuedMessage
 
 
 class Node:
-    def __init__(self, dev_id, register_node=True, seq=1):
+    def __init__(self, dev_id, register_node=True, seq=1, sleep_time=SLEEP_TIME):
         """
         Constructor
         :param dev_id: string, end node id
@@ -45,6 +47,12 @@ class Node:
         self.collision_counter = 0
         self.awaiting_reply = Queue()
         self.ap_duty_cycle = GW_DUTY_CYCLE
+        self.x = 0
+        self.y = 0
+        self.x_direction = 1
+        self.y_direction = 1
+        self.sleep_time = sleep_time
+        self.set_initial_position(round(random.uniform(0, 1) * MAX_X_POSITION, 1), round(random.uniform(0, 1) * MAX_Y_POSITION, 1))
 
     def device_routine(self, normal_queue, emer_queue):
         """
@@ -91,7 +99,7 @@ class Node:
                         self._send_routine(message, normal_queue)
 
                     self.active_time += time.time() - start_time
-                time.sleep(SLEEP_TIME)
+                self.move_node(SLEEP_TIME)
         except KeyboardInterrupt:
             self.uptime = (time.time() - self.uptime) / 1000
             print("{0},{1},{2},{3}".format(self.dev_id, round(self.active_time * PROC_COEFF, 2),
@@ -113,7 +121,8 @@ class Node:
         self.last_downlink_toa = 0
         return toa
 
-    def calculate_heart_rate(self, config_type='normal'):
+    @staticmethod
+    def _calculate_heart_rate(config_type='normal'):
         """
         Heart rate calculation
         :param config_type: string, config type
@@ -148,7 +157,7 @@ class Node:
         message = {}
         message_body = {}
 
-        heart_rate, config_type = self.calculate_heart_rate(config_type)
+        heart_rate, config_type = self._calculate_heart_rate(config_type)
         sf, band, cr, power, freq = self._select_net_data(config_type)
 
         app_data = LoRa.get_data(heart_rate, self.battery_level)
@@ -267,8 +276,8 @@ class Node:
 
     def _process_rega(self, message):
         """
-
-        :param message:
+        Process registration acknowledgement
+        :param message: STIoT Message as a dictionary
         :return
         """
         print('{0}: Received REGA message'.format(self.dev_id))
@@ -279,8 +288,8 @@ class Node:
 
     def _process_txl(self, message):
         """
-
-        :param message:
+        Process TX message
+        :param message: STIoT message as a dictionary
         :return
         """
         print('{0}: Received TXL message'.format(self.dev_id))
@@ -383,3 +392,43 @@ class Node:
         :return void
         """
         self.ap_duty_cycle = duty_cycle
+
+    def set_initial_position(self, x, y):
+        """
+        Sets the position of each node
+        :param x: position on x-axis
+        :param y: position on y-axis
+        :return: void
+        """
+        self.x = x
+        self.y = y
+        print(f'Node {self.dev_id} position set to [{self.x}, {self.y}]')
+
+    def move_node(self, sleep_time=SLEEP_TIME):
+        for i in range(sleep_time):
+            x = round(random.uniform(0, 1) * 1.45, 1)
+            y = round(random.uniform(0, 1) * 1.45, 1)
+            self._check_x_direction(x)
+            self._check_y_direction(y)
+            self.x = self.x + (self.x_direction * x)
+            self.y = self.y + (self.y_direction * y)
+            print(f'Node {self.dev_id} moved to [{self.x:.1f}, {self.y:.1f}]')
+            time.sleep(1)
+
+    def _check_x_direction(self, x):
+        if self.x_direction > 0:
+            # Right step
+            if self.x + x >= MAX_X_POSITION:
+                self.x_direction = -1
+        else:
+            # Left step
+            if self.x - x <= 0:
+                self.x_direction = 1
+
+    def _check_y_direction(self, y):
+        if self.y_direction > 0:
+            if self.y + y >= MAX_Y_POSITION:
+                self.y_direction = -1
+        else:
+            if self.y - y <= 0:
+                self.y_direction = 1

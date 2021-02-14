@@ -13,6 +13,7 @@ from bandit_node import BanditNode
 from generator import load_nodes
 from helper import Helper
 from queued_message import QueuedReply
+from lora import MAX_X_POSITION, MAX_Y_POSITION
 
 sock = None
 conn = None
@@ -58,6 +59,8 @@ def main(argv):
     node_file = "data/group10.txt"
     bandit_nodes = False
     test_scenario = False
+    max_x = MAX_X_POSITION
+    max_y = MAX_Y_POSITION
 
     # Reading arguments from command line
     try:
@@ -117,6 +120,7 @@ def main(argv):
 
                 read_reply(message_queue, access_point, nodes)
             except Exception as qe:
+                print(qe)
                 print(qe)
 
             # Other nodes joins later

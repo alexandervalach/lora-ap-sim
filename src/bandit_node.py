@@ -8,20 +8,21 @@ from lora import PRE_SHARED_KEY
 from lora import Bandwidth
 from lora import CodingRates
 from lora import Frequencies
+from lora import SLEEP_TIME
 from node import Node
 from upper_confidence_bound import UpperConfidenceBound
-from thompson_sampling import ThompsonSampling
 
 
 class BanditNode(Node):
-    def __init__(self, dev_id, algorithm="ucb", register_node=True, seq=1):
+    def __init__(self, dev_id, algorithm="ucb", register_node=True, seq=1, sleep_time=SLEEP_TIME):
         """
-
+        Bandit node constructor
         :param dev_id: string, end node id
         :param algorithm: string, name of algorithm, ucb
         :param register_node: boolean, set if node should itself register first
         :param seq: int, default sequence number value
         """
+        super().__init__(dev_id, register_node, seq, sleep_time)
         self.dev_id = dev_id
         self.seq = seq
         self.battery_level = BATTERY_FULL
@@ -40,11 +41,7 @@ class BanditNode(Node):
         self.collision_counter = 0
         self.awaiting_reply = Queue()
         self.ap_duty_cycle = GW_DUTY_CYCLE
-
-        if algorithm == "ucb":
-            self.algorithm = UpperConfidenceBound(self.net_config)
-        elif algorithm == "ts":
-            self.algorithm = ThompsonSampling(self.net_config)
+        self.algorithm = UpperConfidenceBound(self.net_config)
 
     def _select_net_data(self, config_type="normal"):
         """

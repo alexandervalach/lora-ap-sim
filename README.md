@@ -4,9 +4,9 @@ STIoT packet generator which simulates LoRa@FIIT wireless access point and LoRa@
 ## Supported features and TODO
 
 ### LoRa PHY Features
-- [ ] Generates a position of each node based on the distribution
+- [X] Generates a position of each node based on the distribution
 - [ ] Calculate a PATH LOSS depending on the variable distance from AP
-- [ ] Move the nodes using a normal speed of a human
+- [X] Move the nodes using a normal speed of a human
 
 ### Access Points features
 
@@ -36,7 +36,7 @@ STIoT packet generator which simulates LoRa@FIIT wireless access point and LoRa@
 - [X] Support for MABP reward model and channel selection
 - [X] Support for Upper Confidence Bound parameter selection
 - [ ] Support for Thompson Sampling parameter selection
-- [ ] Update parameters based on partial results from Network Server
+- [ ] Update parameters based on partial results from Network Server (MABP-case)
 
 ## Command line interface
 
