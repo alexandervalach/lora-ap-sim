@@ -1,6 +1,7 @@
 import random
 import base64
 import json
+import math
 
 from enum import Enum
 from datetime import datetime
@@ -18,6 +19,8 @@ CHANNELS = 8
 PRE_SHARED_KEY = '+/////v////7////+////wIAAAA='
 MAX_X_POSITION = 2000
 MAX_Y_POSITION = 2000
+TRANS_ANT_GAIN = 2
+REC_ANT_GAIN = 8
 
 
 class LoRa:
@@ -37,6 +40,20 @@ class LoRa:
         :return
         """
         return round(random.uniform(0, 1) * (-80) - 35, 1)
+
+    @staticmethod
+    def calculate_rssi(tp, gain_t, gain_r, frequency, distance):
+        """
+        Calculate RSSI based on rx and tx antennas, frequency and distance
+        :param tp transmitting power
+        :param gain_t gain of transmitter antenna
+        :param gain_r gain of receiver antenna
+        :param frequency frequency in MHz
+        :param distance distance in km
+        :return
+        """
+        fsl = 32.5 + 20 + math.log(frequency, 10) + math.log(distance)
+        return tp + gain_t - fsl + gain_r
 
     """
     @staticmethod

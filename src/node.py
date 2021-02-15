@@ -15,6 +15,8 @@ from lora import MIN_HEART_RATE
 from lora import MAX_HEART_RATE
 from lora import MAX_X_POSITION
 from lora import MAX_Y_POSITION
+from lora import TRANS_ANT_GAIN
+from lora import REC_ANT_GAIN
 from lora import MessageType
 from lora import Acknowledgement
 from helper import Helper
@@ -170,17 +172,19 @@ class Node:
             print("{0}: Could not send message due to low duty cycle".format(self.dev_id))
             return None
 
+        distance = self._get_distance(MAX_X_POSITION / 2, MAX_Y_POSITION / 2)
         message_body['freq'] = freq
         message_body['band'] = band
         message_body['cr'] = cr
         message_body['dev_id'] = self.dev_id
         message_body['power'] = power
         message_body['duty_c'] = self.ap_duty_cycle
-        message_body['rssi'] = LoRa.get_rssi()
         message_body['sf'] = sf
         message_body['snr'] = LoRa.get_snr()
         message_body['time'] = time_on_air
         message_body['type'] = config_type
+        message_body['rssi'] = LoRa.calculate_rssi(power, TRANS_ANT_GAIN, REC_ANT_GAIN, freq, distance)
+        print(f"{self.dev_id}: RSSI value is {message_body['rssi']}")
 
         message['message_body'] = message_body
 
@@ -207,7 +211,7 @@ class Node:
         """
         Generate new regr message
         :param message: dict, message
-        :param app_data: base64, base64 encoded application data
+        :param data: base64, base64 encoded application data
         :return dict, STIoT message RXL, type normal
         """
         message['message_name'] = MessageType.RXL.value
@@ -222,7 +226,7 @@ class Node:
         """
         Generate new regr message
         :param message: dict, message
-        :param app_data: base64, base64 encoded application data
+        :param data: base64, base64 encoded application data
         :return dict, STIoT message RXL, type emer
         """
         message['message_name'] = MessageType.RXL.value
@@ -432,3 +436,6 @@ class Node:
         else:
             if self.y - y <= 0:
                 self.y_direction = 1
+
+    def _get_distance(self, base_x, base_y):
+        return pow(abs(base_x - self.x), 2) + pow(abs(base_y - self.y), 2)
