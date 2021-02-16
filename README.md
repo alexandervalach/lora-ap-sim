@@ -5,7 +5,7 @@ STIoT packet generator which simulates LoRa@FIIT wireless access point and LoRa@
 
 ### LoRa PHY Features
 - [X] Generate a position of each node based on the distribution
-- [ ] Calculate a PATH LOSS depending on the variable distance from AP
+- [X] Calculate a PATH LOSS depending on the variable distance from AP
 - [X] Move the nodes using a normal speed of a human
 
 ### Access Points features

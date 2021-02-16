@@ -70,7 +70,9 @@ class AccessPoint:
         """
         if reply is not None:
             try:
+                print("================================")
                 print(reply)
+                print("================================")
                 message = json.loads(str(reply, 'ascii'))
                 message_name = message['message_name']
 

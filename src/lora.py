@@ -17,8 +17,8 @@ PROC_COEFF = 475
 SLEEP_TIME = 300
 CHANNELS = 8
 PRE_SHARED_KEY = '+/////v////7////+////wIAAAA='
-MAX_X_POSITION = 2000
-MAX_Y_POSITION = 2000
+MAX_X_POSITION = 5000
+MAX_Y_POSITION = 5000
 TRANS_ANT_GAIN = 2
 REC_ANT_GAIN = 8
 
@@ -28,18 +28,10 @@ class LoRa:
     @staticmethod
     def get_snr():
         """
-        Randomly generated SNR values between 6.5 and 11.75
+        Randomly generated SNR values between -20 and +10
         :return
         """
-        return round(random.uniform(0, 1) * 5.25 + 6.5, 2)
-
-    @staticmethod
-    def get_rssi():
-        """
-        Randomly generated RSSI values between -35 and -115
-        :return
-        """
-        return round(random.uniform(0, 1) * (-80) - 35, 1)
+        return round(random.uniform(0, 1) * 30 - 20, 1)
 
     @staticmethod
     def calculate_rssi(tp, gain_t, gain_r, frequency, distance):
@@ -52,8 +44,8 @@ class LoRa:
         :param distance distance in km
         :return
         """
-        print(f"Frequency: {frequency}, Distance: {distance}")
-        fsl = 32.5 + 20 + math.log(frequency, 10) + math.log(distance)
+        print(f"Frequency: {frequency} MHz, Distance: {distance} km")
+        fsl = 32.5 + 20 * math.log(frequency, 10) + 20 * math.log(distance)
         return round(tp + gain_t - fsl + gain_r, 1)
 
     """
@@ -166,9 +158,11 @@ class LoRa:
         ):
             f_dict = json.loads(str(f.json_message, 'ascii'))
             s_dict = json.loads(str(s.json_message, 'ascii'))
-            print(f.json_message)
-            print("-------------")
-            print(s.json_message)
+            # print("================================")
+            # print(f.json_message)
+            # print("-------------")
+            # print(s.json_message)
+            # print("================================")
             if f_dict['message_body']['sf'] == s_dict['message_body']['sf']:
                 return True
         return False

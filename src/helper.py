@@ -19,5 +19,7 @@ class Helper:
         :param json_message: bytes-like message
         :return dictionary
         """
+        print("================================")
         print(json_message)
+        print("================================")
         return json.loads(json_message)

@@ -167,14 +167,27 @@ class Node:
         app_data = LoRa.get_data(heart_rate, self.battery_level)
         time_on_air = LoRa.calculate_time_on_air(len(app_data), sf, band, cr, 1)
 
+        snr = LoRa.get_snr()
+
         # Check if there is remaining duty cycle, additionally perform refresh
         self.set_remaining_duty_cycle(time_on_air)
-        # print(self.duty_cycle)
+
         if self.duty_cycle == 0:
-            print("{0}: Could not send message due to low duty cycle".format(self.dev_id))
+            print(f"Node {self.dev_id}: Could not send message due to low duty cycle")
+            return None
+
+        # SNR value can not be demodulated
+        if 0 > snr > -7.5:
+            print(f"Node {self.dev_id}: SNR cannot be demodulated")
             return None
 
         distance = self._get_distance_in_km(MAX_X_POSITION / 2, MAX_Y_POSITION / 2)
+        rssi = LoRa.calculate_rssi(power, TRANS_ANT_GAIN, REC_ANT_GAIN, freq / 1000000, distance)
+
+        if rssi < -120:
+            print(f"Node {self.dev_id}: RSSI two low to be demodulated")
+            return None
+
         message_body['freq'] = freq
         message_body['band'] = band
         message_body['cr'] = cr
@@ -182,10 +195,11 @@ class Node:
         message_body['power'] = power
         message_body['duty_c'] = self.ap_duty_cycle
         message_body['sf'] = sf
-        message_body['snr'] = LoRa.get_snr()
+        message_body['snr'] = snr
         message_body['time'] = time_on_air
         message_body['type'] = config_type
-        message_body['rssi'] = LoRa.calculate_rssi(power, TRANS_ANT_GAIN, REC_ANT_GAIN, freq / 1000000, distance)
+        message_body['rssi'] = rssi
+
         print(f"{self.dev_id}: RSSI value is {message_body['rssi']} dB")
         print(f"{self.dev_id}: SNR is {message_body['snr']}")
 
@@ -308,19 +322,19 @@ class Node:
     def set_remaining_duty_cycle(self, time_on_air):
         """
         Checks AP duty cycle and refresh it if duty cycle refresh
-        Returns 0 if available and substracts duty cycle
+        Returns 0 if available and subtracts duty cycle
         :param time_on_air: int, time on air of message
         :return int, 0 if available, 1 if not available
         """
         if LoRa.should_refresh_duty_cycle(self.duty_cycle_refresh):
-            print('{0}: Duty cycle refresh'.format(self.dev_id))
+            print(f"Node {self.dev_id}: Peforming a duty cycle refresh")
             self.duty_cycle = DUTY_CYCLE
             self.duty_cycle_na = 0
             self.duty_cycle_refresh = LoRa.get_future_time()
 
         if self.duty_cycle - time_on_air > 0:
             self.duty_cycle -= time_on_air
-            print('{0}: Remaining duty cycle is {1}.'.format(self.dev_id, self.duty_cycle))
+            print(f"Node {self.dev_id}: Remaining duty cycle is {self.duty_cycle} ms")
             return 0
 
         self.duty_cycle_na = 1
@@ -373,7 +387,6 @@ class Node:
         :return
         """
         if message is None:
-            print("{0}: Message could not be sent due to low duty cycle".format(self.dev_id))
             return
 
         retries = 0
@@ -409,7 +422,7 @@ class Node:
         """
         self.x = x
         self.y = y
-        print(f'Node {self.dev_id} position set to [{self.x}, {self.y}]')
+        print(f"Node {self.dev_id} position set to [{self.x}, {self.y}]")
 
     def move_node(self, sleep_time=SLEEP_TIME):
         for i in range(sleep_time):
@@ -417,9 +430,9 @@ class Node:
             y = round(random.uniform(0, 1) * 1.45, 1)
             self._check_x_direction(x)
             self._check_y_direction(y)
-            self.x = self.x + (self.x_direction * x)
-            self.y = self.y + (self.y_direction * y)
-            print(f'Node {self.dev_id} moved to [{self.x:.1f}, {self.y:.1f}]')
+            self.x += self.x_direction * x
+            self.y += self.y_direction * y
+            # print(f'Node {self.dev_id} moved to [{self.x:.1f}, {self.y:.1f}]')
             time.sleep(1)
 
     def _check_x_direction(self, x):
