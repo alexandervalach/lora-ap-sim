@@ -1,5 +1,6 @@
 import random
 import time
+import math
 
 from multiprocessing import Queue
 from lora import BATTERY_FULL
@@ -54,7 +55,8 @@ class Node:
         self.x_direction = 1
         self.y_direction = 1
         self.sleep_time = sleep_time
-        self.set_initial_position(round(random.uniform(0, 1) * MAX_X_POSITION, 1), round(random.uniform(0, 1) * MAX_Y_POSITION, 1))
+        self.set_initial_position(round(random.uniform(0, 1) * MAX_X_POSITION, 1),
+                                  round(random.uniform(0, 1) * MAX_Y_POSITION, 1))
 
     def device_routine(self, normal_queue, emer_queue):
         """
@@ -172,7 +174,7 @@ class Node:
             print("{0}: Could not send message due to low duty cycle".format(self.dev_id))
             return None
 
-        distance = self._get_distance(MAX_X_POSITION / 2, MAX_Y_POSITION / 2)
+        distance = self._get_distance_in_km(MAX_X_POSITION / 2, MAX_Y_POSITION / 2)
         message_body['freq'] = freq
         message_body['band'] = band
         message_body['cr'] = cr
@@ -183,8 +185,9 @@ class Node:
         message_body['snr'] = LoRa.get_snr()
         message_body['time'] = time_on_air
         message_body['type'] = config_type
-        message_body['rssi'] = LoRa.calculate_rssi(power, TRANS_ANT_GAIN, REC_ANT_GAIN, freq, distance)
-        print(f"{self.dev_id}: RSSI value is {message_body['rssi']}")
+        message_body['rssi'] = LoRa.calculate_rssi(power, TRANS_ANT_GAIN, REC_ANT_GAIN, freq / 1000000, distance)
+        print(f"{self.dev_id}: RSSI value is {message_body['rssi']} dB")
+        print(f"{self.dev_id}: SNR is {message_body['snr']}")
 
         message['message_body'] = message_body
 
@@ -438,4 +441,7 @@ class Node:
                 self.y_direction = 1
 
     def _get_distance(self, base_x, base_y):
-        return pow(abs(base_x - self.x), 2) + pow(abs(base_y - self.y), 2)
+        return math.sqrt(pow(abs(base_x - self.x), 2) + pow(abs(base_y - self.y), 2))
+
+    def _get_distance_in_km(self, base_x, base_y):
+        return round(self._get_distance(base_x, base_y) / 1000, 2)

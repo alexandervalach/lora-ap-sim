@@ -52,8 +52,9 @@ class LoRa:
         :param distance distance in km
         :return
         """
+        print(f"Frequency: {frequency}, Distance: {distance}")
         fsl = 32.5 + 20 + math.log(frequency, 10) + math.log(distance)
-        return tp + gain_t - fsl + gain_r
+        return round(tp + gain_t - fsl + gain_r, 1)
 
     """
     @staticmethod
