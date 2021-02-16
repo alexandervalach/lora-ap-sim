@@ -17,10 +17,12 @@ PROC_COEFF = 475
 SLEEP_TIME = 300
 CHANNELS = 8
 PRE_SHARED_KEY = '+/////v////7////+////wIAAAA='
-MAX_X_POSITION = 5000
-MAX_Y_POSITION = 5000
+MAX_X_POSITION = 10000
+MAX_Y_POSITION = 10000
 TRANS_ANT_GAIN = 2
 REC_ANT_GAIN = 8
+X_DIRECTIONS = [-1, 1]
+Y_DIRECTIONS = [-1, 1]
 
 
 class LoRa:
@@ -294,7 +296,6 @@ BANDIT_ARMS = [
     {"sf":7,"pw":12,"rw":8},
     {"sf":7,"pw":13,"rw":8},
     {"sf":7,"pw":14,"rw":8},
-    {"sf":7,"pw":15,"rw":8},
     {"sf":8,"pw":5,"rw":8},
     {"sf":8,"pw":6,"rw":8},
     {"sf":8,"pw":7,"rw":8},
@@ -305,7 +306,6 @@ BANDIT_ARMS = [
     {"sf":8,"pw":12,"rw":8},
     {"sf":8,"pw":13,"rw":8},
     {"sf":8,"pw":14,"rw":8},
-    {"sf":8,"pw":15,"rw":8},
     {"sf":9,"pw":5,"rw":8},
     {"sf":9,"pw":6,"rw":8},
     {"sf":9,"pw":7,"rw":8},

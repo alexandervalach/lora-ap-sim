@@ -37,6 +37,7 @@ STIoT packet generator which simulates LoRa@FIIT wireless access point and LoRa@
 - [X] Support for Upper Confidence Bound parameter selection
 - [ ] Support for Thompson Sampling parameter selection
 - [ ] Update parameters based on partial results from Network Server (MABP-case)
+- [X] Random initial movement direction
 
 ## Command line interface
 

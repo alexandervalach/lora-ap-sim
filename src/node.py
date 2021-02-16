@@ -18,6 +18,8 @@ from lora import MAX_X_POSITION
 from lora import MAX_Y_POSITION
 from lora import TRANS_ANT_GAIN
 from lora import REC_ANT_GAIN
+from lora import X_DIRECTIONS
+from lora import Y_DIRECTIONS
 from lora import MessageType
 from lora import Acknowledgement
 from helper import Helper
@@ -52,8 +54,8 @@ class Node:
         self.ap_duty_cycle = GW_DUTY_CYCLE
         self.x = 0
         self.y = 0
-        self.x_direction = 1
-        self.y_direction = 1
+        self.x_direction = X_DIRECTIONS[round(random.uniform(0, 1))]
+        self.y_direction = Y_DIRECTIONS[round(random.uniform(0, 1))]
         self.sleep_time = sleep_time
         self.set_initial_position(round(random.uniform(0, 1) * MAX_X_POSITION, 1),
                                   round(random.uniform(0, 1) * MAX_Y_POSITION, 1))
@@ -97,10 +99,11 @@ class Node:
                 else:
                     message = self.generate_message('normal')
 
-                    if message['message_body']['type'] == 'emer':
-                        self._send_routine(message, emer_queue)
-                    else:
-                        self._send_routine(message, normal_queue)
+                    if message:
+                        if message['message_body']['type'] == 'emer':
+                            self._send_routine(message, emer_queue)
+                        else:
+                            self._send_routine(message, normal_queue)
 
                     self.active_time += time.time() - start_time
                 self.move_node(SLEEP_TIME)
@@ -201,7 +204,7 @@ class Node:
         message_body['rssi'] = rssi
 
         print(f"{self.dev_id}: RSSI value is {message_body['rssi']} dB")
-        print(f"{self.dev_id}: SNR is {message_body['snr']}")
+        print(f"{self.dev_id}: SNR is {message_body['snr']} dB")
 
         message['message_body'] = message_body
 
