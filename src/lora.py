@@ -58,14 +58,14 @@ class LoRa:
     """
 
     @staticmethod
-    def get_data(heart_rate, battery_level):
+    def get_data(pos_x, pos_y):
         """
         Generate base64 string from input data
-        :param heart_rate: float
-        :param battery_level: int
+        :param pos_x: float
+        :param pos_y: int
         :return
         """
-        message = str(heart_rate) + "," + str(battery_level)
+        message = str(pos_x) + "," + str(pos_y)
         message_bytes = message.encode('ascii')
         return base64.b64encode(message_bytes).decode('ascii')
 

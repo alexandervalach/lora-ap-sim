@@ -152,14 +152,14 @@ def main(argv):
             processes[node_id] = process
             nodes[node_id] = node
             num_of_nodes += 1
-            time.sleep(random.randrange(2))
-
+            # time.sleep(random.randrange(2))
+colli
 
 if __name__ == "__main__":
     try:
         conn = ConnectionController()
         main(sys.argv[1:])
-    except KeyboardInterrupt:
+    except KeyboardInterrupt as e:
         print("")
 
         if conn is not None:

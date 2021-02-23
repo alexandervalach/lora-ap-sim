@@ -167,7 +167,7 @@ class Node:
         heart_rate, config_type = self._calculate_heart_rate(config_type)
         sf, band, cr, power, freq = self._select_net_data(config_type)
 
-        app_data = LoRa.get_data(heart_rate, self.battery_level)
+        app_data = LoRa.get_data(self.x, self.y)
         time_on_air = LoRa.calculate_time_on_air(len(app_data), sf, band, cr, 1)
 
         snr = LoRa.get_snr()
