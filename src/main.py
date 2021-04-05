@@ -56,7 +56,7 @@ def main(argv):
     register_nodes = False
     shuffle_nodes = False
     duty_cycle_na = 0
-    node_file = "data/group10.txt"
+    node_file = "data/group1.txt"
     bandit_nodes = False
     test_scenario = False
     max_x = MAX_X_POSITION
@@ -93,7 +93,7 @@ def main(argv):
             test_scenario = True
 
     # If there was an AP id defined
-    conn.connect('latedays.fiit.stuba.sk', 25001)
+    conn.connect('lora.fiit.stuba.sk', 25001)
     access_point = AccessPoint(ap_id, conn)
     access_point.send_setr()
 
@@ -153,7 +153,6 @@ def main(argv):
             nodes[node_id] = node
             num_of_nodes += 1
             # time.sleep(random.randrange(2))
-colli
 
 if __name__ == "__main__":
     try:
