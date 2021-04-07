@@ -1,4 +1,3 @@
-from multiprocessing import Queue
 from lora import BATTERY_FULL
 from lora import GW_DUTY_CYCLE
 from lora import DUTY_CYCLE
@@ -39,7 +38,6 @@ class BanditNode(Node):
         self.active_time = 0
         self.uptime = 0
         self.collision_counter = 0
-        self.awaiting_reply = Queue()
         self.ap_duty_cycle = GW_DUTY_CYCLE
         self.algorithm = UpperConfidenceBound(self.net_config)
 
@@ -70,8 +68,7 @@ class BanditNode(Node):
         if dev_id == self.dev_id:
             if body['net_data']:
                 print(body['net_data'])
-                net_data = body['net_data']
-                self.net_config = net_data
+                self.net_config = body['net_data']
         try:
             return body['time']
         except KeyError:
@@ -83,7 +80,7 @@ class BanditNode(Node):
         :param message: TXL message
         :return airtime of processed message
         """
-        print('{0}: Received TXL message'.format(self.dev_id))
+        print(f'{self.dev_id}: Received TXL message')
         body = message['message_body']
         dev_id = body['dev_id']
 
@@ -93,8 +90,9 @@ class BanditNode(Node):
             # app_data = body['app_data']
 
             if body['net_data']:
-                net_data = body['net_data']
-                self.net_config = net_data
+                for arm in body['net_data']:
+                    self.algorithm.update_reward(arm['sf'], arm['power'], arm['reward'])
+
         try:
             return body['time']
         except KeyError:

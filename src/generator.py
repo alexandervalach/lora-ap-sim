@@ -7,6 +7,7 @@ dev_ids = []
 file_path = "data/group1.txt"
 num_of_nodes = 500
 
+
 def generate_nodes(number_of_nodes=500, dev_id_length=4):
     """
     Generate nodes and save them to local array
@@ -43,5 +44,5 @@ def load_nodes(path=file_path):
     file.close()
     return ids
 
-generate_nodes(num_of_nodes, 4)
-save_nodes(file_path)
+# generate_nodes(num_of_nodes, 4)
+# save_nodes(file_path)

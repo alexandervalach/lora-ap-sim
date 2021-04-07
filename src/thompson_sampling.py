@@ -1,5 +1,6 @@
 import random
 
+
 class ThompsonSampling:
     def __init__(self, arms):
         """

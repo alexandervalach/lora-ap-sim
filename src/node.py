@@ -7,7 +7,6 @@ from lora import BATTERY_FULL
 from lora import DUTY_CYCLE
 from lora import GW_DUTY_CYCLE
 from lora import NET_CONFIG
-from lora import PROC_COEFF
 from lora import SLEEP_TIME
 from lora import LoRa
 from lora import PRE_SHARED_KEY
@@ -49,6 +48,7 @@ class Node:
         self.node_registered = not register_node
         self.active_time = 0
         self.uptime = 0
+        self.total_tx_cost = 0
         self.collision_counter = 0
         self.awaiting_reply = Queue()
         self.ap_duty_cycle = GW_DUTY_CYCLE
@@ -88,13 +88,16 @@ class Node:
 
                     msg_dict = Helper.from_json(queued_message.json_message)
 
+                    # A message routine. Messages are sent x times and the devices enter sleep mode.
                     if msg_dict['message_body']['type'] == 'emer':
                         self._send_routine(msg_dict, emer_queue)
                     else:
                         self._send_routine(msg_dict, normal_queue)
 
+                    # If it was retransmitted less than 3 times put message back to waiting queue when
                     if queued_message.retries < 3:
                         self.awaiting_reply.put(queued_message)
+
                 # Otherwise generate new message
                 else:
                     message = self.generate_message('normal')
@@ -109,8 +112,7 @@ class Node:
                 self.move_node(SLEEP_TIME)
         except KeyboardInterrupt:
             self.uptime = (time.time() - self.uptime) / 1000
-            print("{0},{1},{2},{3}".format(self.dev_id, round(self.active_time * PROC_COEFF, 2),
-                                           round(self.uptime * PROC_COEFF, 2), self.collision_counter))
+            print(f'{self.dev_id},{round(self.active_time, 2)},{round(self.uptime, 2)},{self.collision_counter}')
 
     def get_dev_id(self):
         """
@@ -272,7 +274,7 @@ class Node:
             msg = self.awaiting_reply.get(timeout=1)
             messages_awaiting_reply.append(msg)
             if msg.id == reply.id:
-                print("{0}: Message {1} acknowledged".format(self.dev_id, reply.id))
+                print(f'{self.dev_id}: Message {reply.id} acknowledged')
                 messages_awaiting_reply.remove(msg)
                 break
 
@@ -305,18 +307,6 @@ class Node:
         :return
         """
         print('{0}: Received REGA message'.format(self.dev_id))
-        try:
-            return message['message_body']['time']
-        except KeyError:
-            return 0
-
-    def _process_txl(self, message):
-        """
-        Process TX message
-        :param message: STIoT message as a dictionary
-        :return
-        """
-        print('{0}: Received TXL message'.format(self.dev_id))
         try:
             return message['message_body']['time']
         except KeyError:
@@ -373,12 +363,11 @@ class Node:
 
             if message_body['type'] == 'emer' or message_body['type'] == 'reg':
                 self.awaiting_reply.put(queued_message)
-                print("{0}: {1} message scheduled. Awaiting reply for {2}.".format(
-                    self.dev_id, message_body['type'], queued_message.id))
+                print(f"{self.dev_id}: {message_body['type']} message scheduled. Awaiting reply for {queued_message.id}.")
             else:
-                print("{0}: {1} message scheduled".format(self.dev_id, message_body['type']))
+                print(f"{self.dev_id}: {message_body['type']} message scheduled")
             return True
-        print("{0}: A collision occurred on SF{1}".format(self.dev_id, message_body['sf']))
+        print(f"{self.dev_id}: A collision occurred on SF{message_body['sf']}")
         return False
 
     def _send_routine(self, message, queue, is_register=False):
@@ -401,8 +390,9 @@ class Node:
                 retries += 1
                 self.collision_counter += 1
                 if retries >= 3:
-                    print("{0}: {1} unsuccessful attempts. Entering sleep mode".format(self.dev_id, retries))
+                    print(f'{self.dev_id}: {retries} unsuccessful attempts. Entering sleep mode')
                     break
+                # Simulate a waiting process
                 time.sleep(random.randrange(1) + 1)
 
             if is_register and message_scheduled:

@@ -39,6 +39,7 @@ def read_reply(queue, access_point, nodes):
         if access_point.duty_cycle_na != 1:
             toa = nodes[dev_id].process_reply(queued_reply, access_point.duty_cycle)
         else:
+            nodes[dev_id].collision_counter += 1
             print("Could not send any downlink messages till next duty cycle refresh")
             toa = 0
 
@@ -120,7 +121,6 @@ def main(argv):
 
                 read_reply(message_queue, access_point, nodes)
             except Exception as qe:
-                print(qe)
                 print(qe)
 
             # Other nodes joins later

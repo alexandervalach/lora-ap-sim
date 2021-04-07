@@ -1,10 +1,4 @@
-from multiprocessing import Queue
-from lora import BATTERY_FULL
-from lora import DUTY_CYCLE
-from lora import NET_CONFIG
 from lora import LoRa
-from lora import PRE_SHARED_KEY
-from lora import REG_FREQUENCIES
 from lora import GW_DUTY_CYCLE
 from lora import SLEEP_TIME
 from node import Node
@@ -28,7 +22,6 @@ class EndNode(Node):
         self.active_time = 0
         self.uptime = 0
         self.collision_counter = 0
-        self.awaiting_reply = Queue()
         self.ap_duty_cycle = GW_DUTY_CYCLE
 
     def _select_net_data(self, config_type='normal'):
@@ -79,7 +72,7 @@ class EndNode(Node):
             return 0
 
     def _process_txl(self, message):
-        print('{0}: Received TXL message'.format(self.dev_id))
+        print(f"{self.dev_id}: Received TXL message")
         body = message['message_body']
         dev_id = body['dev_id']
 

@@ -50,7 +50,7 @@ class UpperConfidenceBound:
         :return float, number of importance
         """
         exploration_factor = math.sqrt(2 * math.log(self.num_tries + 1) / num_selections)
-        print("AVG_RW: {0} EXPL_FACTOR: {1}".format(avg_reward, exploration_factor))
+        print(f'AVG_RW: {avg_reward} EXPL_FACTOR: {exploration_factor}')
         return avg_reward + exploration_factor
 
     def update_reward(self, sf, pw, rw):
@@ -63,7 +63,36 @@ class UpperConfidenceBound:
         i = 0
         for data in self.net_data:
             if data.sf == sf and data.pw == pw:
-                self.net_data[i]['rw'] += rw
+                self.net_data[i]['rw'] = rw
+                print(f'Reward updated to SF={sf},TP={pw},RW={rw}')
+            i += 1
+
+    def increment_reward(self, sf, pw, inc=1):
+        """
+        This method updates a reward for a given arm.
+        :param inc: int, increment
+        :param sf: int, spreading factor
+        :param pw: int, power
+        """
+        i = 0
+        for data in self.net_data:
+            if data.sf == sf and data.pw == pw:
+                self.net_data[i]['rw'] += inc
+                print(f'Reward incremented to SF={sf},TP={pw},RW={self.net_data[i]["rw"]}')
+            i += 1
+
+    def decrement_reward(self, sf, pw, dec=1):
+        """
+        This method updates a reward for a given arm.
+        :param dec: int, decrement
+        :param sf: int, spreading factor
+        :param pw: int, power
+        """
+        i = 0
+        for data in self.net_data:
+            if data.sf == sf and data.pw == pw:
+                self.net_data[i]['rw'] -= dec
+                print(f'Reward decremented to SF={sf},TP={pw},RW={self.net_data[i]["rw"]}')
             i += 1
 
     def update_arms(self, net_data):

@@ -13,8 +13,7 @@ BATTERY_FULL = 100
 MIN_HEART_RATE = 50
 MAX_HEART_RATE = 150
 LORA_VERSION = "1.0"
-PROC_COEFF = 475
-SLEEP_TIME = 300
+SLEEP_TIME = 120
 CHANNELS = 8
 PRE_SHARED_KEY = '+/////v////7////+////wIAAAA='
 MAX_X_POSITION = 10000
@@ -47,6 +46,7 @@ class LoRa:
         :return
         """
         print(f"Frequency: {frequency} MHz, Distance: {distance} km")
+        # 32.5 is constant value used when a distance is in km and frequency in MHz
         fsl = 32.5 + 20 * math.log(frequency, 10) + 20 * math.log(distance)
         return round(tp + gain_t - fsl + gain_r, 1)
 

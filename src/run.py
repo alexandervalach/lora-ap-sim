@@ -14,6 +14,7 @@ register = 1
 
 print("Loading APs configuration...")
 
+
 def main(argv):
     """
     Multi-AP processing
