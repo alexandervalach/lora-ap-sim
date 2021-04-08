@@ -184,6 +184,7 @@ class Node:
         # SNR value can not be demodulated
         if 0 > snr > -7.5:
             print(f"Node {self.dev_id}: SNR cannot be demodulated")
+            self.collision_counter += 1
             return None
 
         distance = self._get_distance_in_km(MAX_X_POSITION / 2, MAX_Y_POSITION / 2)
@@ -191,6 +192,7 @@ class Node:
 
         if rssi < -120:
             print(f"Node {self.dev_id}: RSSI two low to be demodulated")
+            self.collision_counter += 1
             return None
 
         message_body['freq'] = freq
