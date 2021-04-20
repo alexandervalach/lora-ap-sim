@@ -15,7 +15,7 @@ class UpperConfidenceBound:
         self.total_reward = 0
         self.num_tries = 0
 
-    def choose_arm(self):
+    def select_arm(self):
         """
         Selects the best arm from net_data.
         :return dict, returns selected arm

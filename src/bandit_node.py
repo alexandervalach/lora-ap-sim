@@ -10,6 +10,7 @@ from lora import Frequencies
 from lora import SLEEP_TIME
 from node import Node
 from upper_confidence_bound import UpperConfidenceBound
+from thompson_sampling import ThompsonSampling
 
 
 class BanditNode(Node):
@@ -37,9 +38,12 @@ class BanditNode(Node):
         self.node_registered = not register_node
         self.active_time = 0
         self.uptime = 0
-        self.collision_counter = 0
         self.ap_duty_cycle = GW_DUTY_CYCLE
-        self.algorithm = UpperConfidenceBound(self.net_config)
+
+        if algorithm == 'ts':
+            self.algorithm = ThompsonSampling(self.net_config)
+        elif algorithm == 'ucb':
+            self.algorithm = UpperConfidenceBound(self.net_config)
 
     def _select_net_data(self, config_type="normal"):
         """
@@ -47,7 +51,7 @@ class BanditNode(Node):
         :param config_type: deprecated
         :return
         """
-        net_data = self.algorithm.choose_arm()
+        net_data = self.algorithm.select_arm()
         sf = net_data['sf']
         power = net_data['pw']
         band = Bandwidth.BW125.value

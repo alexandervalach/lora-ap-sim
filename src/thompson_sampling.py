@@ -1,59 +1,58 @@
+# Inspired by Thompson Bernoulli Example: https://github.com/JussiM01/ThompsonSampling/blob/master/thompsonbernoulli.py
+# and https://github.com/alison-carrera/mabalgs/blob/master/mab/algs.py
+
 import random
 
 
 class ThompsonSampling:
-    def __init__(self, arms):
+    def __init__(self, net_data):
         """
-        TS Constructor
-        :param arms: list, list of arms
+        Thompson Sampling Constructor
+        :param net_data: list, list of bandit arms
         """
-        self.arms = arms
+        self.net_data = net_data
+        self.num_arms = len(net_data)
+        self.alphas = [1] * self.num_arms
+        self.betas = [1] * self.num_arms
+        self.successes = [0] * self.num_arms
+        self.failures = [0] * self.num_arms
 
-    def choose_arm(self):
+    def setup(self, alphas, betas, successes, failures):
         """
-        Choose and arm base on alpha and bate values
+        Thompson Sampling Constructor
+        :param failures:
+        :param successes:
+        :param betas:
+        :param alphas:
+        """
+        self.alphas = alphas
+        self.betas = betas
+        self.successes = successes
+        self.failures = failures
+
+    def select_arm(self):
+        """
+        Select an arm base on alpha and bate values
         :return dict, selected arm as a dictionary
         """
-        N = 10000
-        d = 10
-        ads_selected = []
-        numbers_of_reward_1 = [0] * d
-        numbers_of_reward_0 = [0] * d
-        total_reward = 0
+        thetas = []
 
-        for n in range(0, len(self.arms)):
-            ad = 0
-            max_random = 0
+        for i in range(len(self.alphas)):
+            thetas.append(random.betavariate(self.successes[i] + self.alphas[i], self.failures[i] + self.betas[i]))
 
-            for i in range(0, d):
-                random_beta = random.betavariate(numbers_of_reward_1[i] + 1, numbers_of_reward_0[i] + 1)
-                if random_beta > max_random:
-                    max_random = random_beta
-                    ad = i
+        return self.net_data[thetas.index(max(thetas))]
 
-            ads_selected.append(ad)
-            reward = self.arms[ad]
-
-            if reward == 1:
-                numbers_of_reward_1[ad] = numbers_of_reward_1[ad] + 1
-            else:
-                numbers_of_reward_0[ad] = numbers_of_reward_0[ad] + 1
-
-            total_reward = total_reward + reward
-
-        # rewards_0 = self.n_impressions - self.rewards
-        # rewards_0[rewards_0 <= 0] = 1
-        # theta_value = np.random.beta(self.rewards, rewards_0)
-        # ranked_arms = np.flip(np.argsort(theta_value), axis=0)
-        # chosen_arm = ranked_arms[0]
-        # self.n_impressions[chosen_arm] += 1
-        #  return chosen_arm, ranked_arms
-
-    def update_reward(self, chosen_arm, reward):
+    def update_reward(self, arm, reward):
         """
         Update reward in arm
-        :param chosen_arm: int, index of arm
+        :param arm: int, selected arm
         :param reward: int, reward increment or decrement
         :return void
         """
-        self.arms[chosen_arm]['rw'] += reward
+        index = self.net_data.index(arm)
+
+        if reward == 1:
+            self.successes[index] += 1
+        else:
+            self.failures[index] += 1
+

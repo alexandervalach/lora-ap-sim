@@ -39,7 +39,7 @@ def read_reply(queue, access_point, nodes):
         if access_point.duty_cycle_na != 1:
             toa = nodes[dev_id].process_reply(queued_reply, access_point.duty_cycle)
         else:
-            nodes[dev_id].collision_counter += 1
+            nodes[dev_id].collisions += 1
             print("Could not send any downlink messages till next duty cycle refresh")
             toa = 0
 
@@ -59,15 +59,16 @@ def main(argv):
     duty_cycle_na = 0
     node_file = "data/group1.txt"
     bandit_nodes = False
+    algorithm = 'ucb'
     test_scenario = False
     max_x = MAX_X_POSITION
     max_y = MAX_Y_POSITION
 
     # Reading arguments from command line
     try:
-        opts, args = getopt.getopt(argv, "hi:rsf:abt", ["id=", "file=", "help", "register", "shuffle", "bandit", "test"])
+        opts, args = getopt.getopt(argv, "hi:rsf:ab:t", ["id=", "file=", "help", "register", "shuffle", "bandit=", "test"])
     except getopt.GetoptError:
-        print("main.py -i <access-point-id> [-r -s -t]")
+        print("main.py -i <access-point-id> [-f <file-path> -r -s -b <algorithm> -t]")
         sys.exit(2)
 
     for opt, arg in opts:
@@ -77,7 +78,7 @@ def main(argv):
             print("-r, --register\t\t- Include end nodes registration process")
             print("-s, --shuffle\t\t- Shuffle list of end nodes")
             print("-f <file_path>, --file=<file_path>\t- Specify LoRa node id file")
-            print("-b, --bandit\t- Activating bandit nodes support")
+            print("-b <algorithm>, --bandit\t- Activates bandit nodes and select UCB or TS algorithm")
             print("-t, --test\t- Using test scenario for developing purposes")
             sys.exit(0)
         elif opt in ("-i", "--id"):
@@ -90,6 +91,7 @@ def main(argv):
             node_file = arg
         elif opt in ("-b", "--bandit"):
             bandit_nodes = True
+            algorithm = arg
         elif opt in ("-t", "--test"):
             test_scenario = True
 
@@ -128,7 +130,7 @@ def main(argv):
                 node_id = node_ids[num_of_nodes]
 
                 if bandit_nodes:
-                    node = BanditNode(node_id, "ucb", register_nodes)
+                    node = BanditNode(node_id, algorithm, register_nodes)
                 else:
                     node = EndNode(node_id, register_nodes)
 
@@ -142,7 +144,7 @@ def main(argv):
         if num_of_nodes < len(node_ids):
             node_id = node_ids[num_of_nodes]
             if bandit_nodes:
-                node = BanditNode(node_id, "ucb", register_nodes)
+                node = BanditNode(node_id, algorithm, register_nodes)
             else:
                 node = EndNode(node_id, register_nodes)
 
@@ -154,13 +156,12 @@ def main(argv):
             num_of_nodes += 1
             # time.sleep(random.randrange(2))
 
+
 if __name__ == "__main__":
     try:
         conn = ConnectionController()
         main(sys.argv[1:])
     except KeyboardInterrupt as e:
-        print("")
-
         if conn is not None:
             conn.close()
             print("Connection closed")

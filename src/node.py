@@ -49,7 +49,7 @@ class Node:
         self.active_time = 0
         self.uptime = 0
         self.total_tx_cost = 0
-        self.collision_counter = 0
+        self.collisions = 0
         self.awaiting_reply = Queue()
         self.ap_duty_cycle = GW_DUTY_CYCLE
         self.x = 0
@@ -59,6 +59,7 @@ class Node:
         self.sleep_time = sleep_time
         self.set_initial_position(round(random.uniform(0, 1) * MAX_X_POSITION, 1),
                                   round(random.uniform(0, 1) * MAX_Y_POSITION, 1))
+        self.total_messages = 0
 
     def device_routine(self, normal_queue, emer_queue):
         """
@@ -111,8 +112,8 @@ class Node:
                     self.active_time += time.time() - start_time
                 self.move_node(SLEEP_TIME)
         except KeyboardInterrupt:
-            self.uptime = (time.time() - self.uptime) / 1000
-            print(f'{self.dev_id},{round(self.active_time, 2)},{round(self.uptime, 2)},{self.collision_counter}')
+            self.uptime = round((time.time() - self.uptime) / 1000, 2)
+            print(f'{self.dev_id},{round(self.active_time, 2)},{self.uptime},{self.collisions},{self.total_messages}')
 
     def get_dev_id(self):
         """
@@ -184,7 +185,7 @@ class Node:
         # SNR value can not be demodulated
         if 0 > snr > -7.5:
             print(f"Node {self.dev_id}: SNR cannot be demodulated")
-            self.collision_counter += 1
+            self.collisions += 1
             return None
 
         distance = self._get_distance_in_km(MAX_X_POSITION / 2, MAX_Y_POSITION / 2)
@@ -192,7 +193,7 @@ class Node:
 
         if rssi < -120:
             print(f"Node {self.dev_id}: RSSI two low to be demodulated")
-            self.collision_counter += 1
+            self.collisions += 1
             return None
 
         message_body['freq'] = freq
@@ -365,7 +366,8 @@ class Node:
 
             if message_body['type'] == 'emer' or message_body['type'] == 'reg':
                 self.awaiting_reply.put(queued_message)
-                print(f"{self.dev_id}: {message_body['type']} message scheduled. Awaiting reply for {queued_message.id}.")
+                print(
+                    f"{self.dev_id}: {message_body['type']} message scheduled. Awaiting reply for {queued_message.id}.")
             else:
                 print(f"{self.dev_id}: {message_body['type']} message scheduled")
             return True
@@ -374,7 +376,7 @@ class Node:
 
     def _send_routine(self, message, queue, is_register=False):
         """
-        Try to send a message three times
+        Try to send a message up to three times
         :param message: dict, send message
         :param queue: Queue, normal queue
         :param is_register: boolean, check if registration
@@ -388,9 +390,11 @@ class Node:
 
         while not message_scheduled:
             message_scheduled = self._schedule_message(message, queue)
+            self.total_messages += 1
+
             if not message_scheduled:
                 retries += 1
-                self.collision_counter += 1
+                self.collisions += 1
                 if retries >= 3:
                     print(f'{self.dev_id}: {retries} unsuccessful attempts. Entering sleep mode')
                     break
@@ -417,7 +421,7 @@ class Node:
         """
         self.x = x
         self.y = y
-        print(f"Node {self.dev_id} position set to [{self.x}, {self.y}]")
+        print(f'{self.dev_id}: position set to [{self.x}, {self.y}]')
 
     def move_node(self, sleep_time=SLEEP_TIME):
         for i in range(sleep_time):
@@ -425,9 +429,9 @@ class Node:
             y = round(random.uniform(0, 1) * 1.45, 1)
             self._check_x_direction(x)
             self._check_y_direction(y)
-            self.x += self.x_direction * x
-            self.y += self.y_direction * y
-            # print(f'Node {self.dev_id} moved to [{self.x:.1f}, {self.y:.1f}]')
+            self.x += round(self.x_direction * x, 1)
+            self.y += round(self.y_direction * y, 1)
+            # print(f'Node {self.dev_id} moved to [{self.x}, {self.y}]')
             time.sleep(1)
 
     def _check_x_direction(self, x):

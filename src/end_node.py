@@ -21,7 +21,6 @@ class EndNode(Node):
         self.node_registered = not register_node
         self.active_time = 0
         self.uptime = 0
-        self.collision_counter = 0
         self.ap_duty_cycle = GW_DUTY_CYCLE
 
     def _select_net_data(self, config_type='normal'):
