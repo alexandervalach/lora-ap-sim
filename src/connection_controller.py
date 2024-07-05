@@ -5,8 +5,10 @@ import ssl
 class ConnectionController:
     def __init__(self, s=None):
         """
-        Constructor
-        :param s: ssl socket, instance of socket
+        Initializes a new ConnectionController instance.
+
+        Args:
+            s (socket.socket, optional): An existing SSL socket instance. If None, a new socket is created.
         """
         if s is None:
             self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -16,12 +18,16 @@ class ConnectionController:
 
         self.conn = ssl.wrap_socket(self.s, ssl_version=ssl.PROTOCOL_TLSv1_2)
 
-    def connect(self, host, port):
+    def connect(self, host: str, port: int) -> None:
         """
-        Connect to a remote server
-        :param host: string ip address or domain name
-        :param port:
-        :return
+        Connects to a remote server.
+
+        Args:
+            host (str): IP address or domain name of the remote server.
+            port (int): Port number on which to connect.
+        
+        Raises:
+            Exception: If an error occurs during the connection attempt.
         """
         try:
             self.conn.connect((host, port))
@@ -29,26 +35,30 @@ class ConnectionController:
             print("An error occurred during a connection attempt")
             print(e)
 
-    def get_connection(self):
+    def get_connection(self) -> ssl.SSLSocket:
         """
-        Returns a connection
-        :return ssl socket wrapper
+        Returns the SSL socket wrapper used for the connection.
+
+        Returns:
+            ssl.SSLSocket: The SSL socket wrapper.
         """
         return self.conn
 
-    def send_data(self, data):
+    def send_data(self, data: bytes) -> bytes:
         """
-        Send all buffered data using ssl socket
-        :param data: bytes, STIoT message in bytes
-        :return reply if received, otherwise None
+        Sends data using the SSL socket and receives a reply.
+
+        Args:
+            data (bytes): Data to be sent over the connection.
+
+        Returns:
+            bytes: Reply received from the server, or None if no reply is received.
         """
         self.conn.sendall(data)
 
         try:
             reply = self.recv(1024)
             if reply is not None:
-                # print("Reply:")
-                # print(str(reply, 'ascii'))
                 return reply
             else:
                 return None
@@ -56,32 +66,30 @@ class ConnectionController:
             print("No reply from network server")
             return None
 
-    def close(self):
+    def close(self) -> None:
         """
-        Properly close connection
-        :return
+        Closes the socket connections properly.
         """
         self.s.close()
         self.conn.close()
 
-    def recv(self, buffer_size=1024):
+    def recv(self, buffer_size: int = 1024) -> bytes:
         """
-        Custom socket receive method
-        :param buffer_size: int, default is 1024
-        :return received data
+        Receives data from the SSL socket.
+
+        Args:
+            buffer_size (int, optional): Size of the buffer to receive data. Defaults to 1024.
+
+        Returns:
+            bytes: Data received from the server.
         """
-        # print("Waiting for reply...")
         try:
             text = bytes()
-            chunk = bytes()
             while True:
-                chunk += self.conn.recv(buffer_size)
+                chunk = self.conn.recv(buffer_size)
                 if not chunk:
                     break
-                else:
-                    text += chunk
+                text += chunk
+            return text
         except Exception as e:
-            if text:
-                return text
-            else:
-                return None
+            return None
